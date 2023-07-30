@@ -21,18 +21,18 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
 
     private void Start()
     {
-        UnitActionSystem.Instance.OnSelectedUnitChanged += UnitActionSystem_OnSelectedUnitChanged; // подписываемся на Event из UnitActionSystem (становимся слушателями). Обозначает что мы выполняем функцию UnitActionSystem_OnSelectedUnitChanged()
-                                                                                                   // Будет выполняться каждый раз когда мы меняем выбранного юнита. //OnSelectedUnitChanged - Выбранный Юнит Изменен
-        UnitActionSystem.Instance.OnSelectedActionChanged += UnitActionSystem_OnSelectedActionChanged; // подписываемся на Event// Будет выполняться каждый раз когда мы меняем Базовое Действие // Выбранное Действие Изменено
+        UnitActionSystem.Instance.OnSelectedUnitChanged += UnitActionSystem_OnSelectedUnitChanged; //Выбранный Юнит Изменен// подписываемся на Event из UnitActionSystem (становимся слушателями). Обозначает что мы выполняем функцию UnitActionSystem_OnSelectedUnitChanged()
+                                                                                              
+        UnitActionSystem.Instance.OnSelectedActionChanged += UnitActionSystem_OnSelectedActionChanged; //Выбранное Действие Изменено// подписываемся на Event Будет выполняться каждый раз когда мы меняем Базовое Действие // 
 
-        UnitActionSystem.Instance.OnActionStarted += UnitActionSystem_OnActionStarted; // подписываемся на Event// Будет выполняться каждый раз при старте действия. // Действие Начато
+        UnitActionSystem.Instance.OnActionStarted += UnitActionSystem_OnActionStarted; // Действие Начато// подписываемся на Event// Будет выполняться каждый раз при старте действия. //
 
         //2//3//{ Еще несколько способов скрыть кнопки когда занят действием
-        UnitActionSystem.Instance.OnBusyChanged += UnitActionSystem_OnBusyChanged; // Подписываюсь на Event и выполним UnitActionSystem_OnBusyChanged, эта фунуция получит от события булевый аргумент // Занятость Изменена
+        UnitActionSystem.Instance.OnBusyChanged += UnitActionSystem_OnBusyChanged; // Занятость Изменена Подписываюсь на Event и выполним UnitActionSystem_OnBusyChanged, эта фунуция получит от события булевый аргумент //
         //2//3//}
-        TurnSystem.Instance.OnTurnChanged += TurnSystem_OnTurnChanged; // подписываемся на Event // Будет выполняться (изминение текста очков действий) каждый раз когда изменен номер хода.
+        TurnSystem.Instance.OnTurnChanged += TurnSystem_OnTurnChanged; // Изменен номер хода подписываемся на Event // Будет выполняться (изминение текста очков действий).
         // РЕШЕНИЕ 2 //{
-        Unit.OnAnyActionPointsChanged += Unit_OnAnyActionPointsChanged; //подписываемся на статический Event // Буудет выполняться каждый раз при изменении очков действий у ЛЮБОГО(Any) юнита а не только у выбранного.
+        Unit.OnAnyActionPointsChanged += Unit_OnAnyActionPointsChanged; //Изменении очков действий у ЛЮБОГО(Any) юнитаподписываемся на статический Event // Буудет выполняться каждый раз при изменении очков действий у ЛЮБОГО(Any) юнита а не только у выбранного.
         // РЕШЕНИЕ 2 //}
 
         CreateUnitActionButtons();

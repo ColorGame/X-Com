@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -21,9 +22,9 @@ public class ScreenShakeActions : MonoBehaviour //Независимый класс который реал
         ScreenShake.Instance.Shake(2); // По умолчанию интенсивность тряски = 1
     }
 
-    private void GrenadeProjectile_OnAnyGrenadeExploded(object sender, System.EventArgs e)
+    private void GrenadeProjectile_OnAnyGrenadeExploded(object sender, EventArgs e)
     {
-        ScreenShake.Instance.Shake(4f); // Интенсивность тряски при взрыве гранаты установим 2 //НУЖНО НАСТРОИТЬ//
+        ScreenShake.Instance.Shake(5); // Интенсивность тряски при взрыве гранаты установим 2 //НУЖНО НАСТРОИТЬ//
     }
 
     private void ShootAction_OnAnyShoot(object sender, ShootAction.OnShootEventArgs e)

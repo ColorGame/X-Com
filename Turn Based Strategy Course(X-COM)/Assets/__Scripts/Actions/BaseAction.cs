@@ -13,7 +13,7 @@ public abstract class BaseAction : MonoBehaviour    //Базовое Действие Этот клас
 
     protected Unit _unit; // Юнит на котором лежит Выбранное Действие
     protected bool _isActive; // Булевая переменная. Что бы исключить паралельное выполнение нескольких действий
-                              // (в нашем случае мы пытаемся разделить два вращения Spin() и  transform.forward)
+                              
 
     //Буду использовать встроенный делегат Action вместо - //public delegate void ActionCompleteDelegate(); //завершение действия // Объявляем делегат который не принимает аргумент и возвращает пустоту
     protected Action _onActionComplete; //(по завершении действия)// Объявляю делегат в пространстве имен - using System;
@@ -33,7 +33,7 @@ public abstract class BaseAction : MonoBehaviour    //Базовое Действие Этот клас
 
     public abstract List<GridPosition> GetValidActionGridPositionList(); //Получить Список Допустимых Сеточных Позиция для Действий
 
-    public virtual bool IsValidActionGridPosition(GridPosition gridPosition) //(Проверяем) Является ли Допустипой Сеточная позиция для Действия //Сделаем virtual- если понадобиться переопределить где нибудь
+    public virtual bool IsValidActionGridPosition(GridPosition gridPosition) //(Проверяем) Является ли Сеточная позиция Допустимой для Действия //Сделаем virtual- если понадобиться переопределить где нибудь
     {
         List<GridPosition> validGridPositionList = GetValidActionGridPositionList();
         return validGridPositionList.Contains(gridPosition); // Если наша _gridPosition содержиться в листе допустимых позиций, то вернется  истина

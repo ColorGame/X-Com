@@ -31,7 +31,7 @@ public class BarrelInteract : MonoBehaviour, IInteractable // Ѕочка ¬заимодейств
 
     private void Update()
     {
-        if (!_isActive) // ≈сли происходит взаимодействие с дверью то она активна и выполн€етс€ код ниже
+        if (!_isActive) // ≈сли происходит взаимодействие с бочкой то она активна и выполн€етс€ код ниже
         {
             return; // выходим и игнорируем код ниже
         }

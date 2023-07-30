@@ -28,8 +28,11 @@ public class ShootAction : BaseAction
     }
 
     [SerializeField] private LayerMask _obstaclesAndDoorLayerMask; //маска слоя препятствия и двери (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Obstacles и DoorInteract и MousePlane(пол) // ВАЖНО НА ВСЕХ СТЕНАХ В ИГРЕ УСТАНОВИТЬ МАСКУ СЛОЕВ -Obstacles, а на дверях -DoorInteract //для полов верхних этажей поменять колайдер на Box collider иначе снизу можно будет простреливать верхний этаж
+    [SerializeField] private LayerMask _smokeAndCoverLayerMask; //маска слоя ДЫМА и ПРИКРЫТИЯ (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Smoke и Cover // ВАЖНО НА ВСЕХ ПРИКРЫТИЯ и ДЫМЕ от гранаты,  УСТАНОВИТЬ СООТВЕТСТВУЮЩУЮ МАСКУ СЛОЕВt 
     [SerializeField] private int _numberShoot = 3; // Количество выстрелов
     [SerializeField] private float _delayShoot = 0.2f; //задержка между выстрелами
+    [SerializeField] private Transform _bulletProjectilePrefab; // в инспекторе закинуть префаб пули
+    [SerializeField] private Transform _shootPointTransform; // в инспекторе закинуть точку выстрела лежит на автомате
 
     private State _state; // Состояние юнита
     private int _maxShootDistance = 7;
@@ -38,9 +41,13 @@ public class ShootAction : BaseAction
     private bool _canShootBullet; // Может стрелять пулей    
     private float _timerShoot; //таймер выстрела
     private int _counterShoot; // Счетчик выстрелов
+    private bool _hit; // Попал или промазал
+    private float _hitPercent; // Процент попадания
 
-
-
+    private void Start()
+    {
+        _hitPercent = 1f; //Установим Процент попадания МАКСИМАЛЬНЫМ 100%
+    }
     private void Update()
     {
         if (!_isActive) // Если не активны то ...
@@ -59,7 +66,7 @@ public class ShootAction : BaseAction
                 aimDirection.y = 0; // Чтобы юнит не наклонялся пли стрельбе (т.к. вектор будет поворачиваться только по плоскости x,z)
 
                 float rotateSpeed = 10f; //НУЖНО НАСТРОИТЬ// чем больше тем быстрее
-                transform.forward = Vector3.Slerp(transform.forward, aimDirection, Time.deltaTime * rotateSpeed); // поворт юнита.
+                transform.forward = Vector3.Slerp(transform.forward, aimDirection, Time.deltaTime * rotateSpeed); // поворт юнита.                               
 
                 break;
 
@@ -84,7 +91,7 @@ public class ShootAction : BaseAction
                 break;
         }
 
-        if (_stateTimer <= 0) // По истечению времени _stateTimer вызовим NextState() которая в свою очередь переключит состояние. Например - у меня было State.Aiming: тогда в case State.Aiming: переключу на State.Shooting;
+        if (_stateTimer <= 0) // По истечению времени _stateTimer вызовим NextState() которая в свою очередь переключит состояние. Например - у меня было TypeGrenade.Aiming: тогда в case TypeGrenade.Aiming: переключу на TypeGrenade.Shooting;
         {
             NextState(); //Следующие состояние
         }
@@ -143,7 +150,60 @@ public class ShootAction : BaseAction
             shootingUnit = _unit
         }); // Запустим событие Начал стрелять и в аргумент передадим в кого стреляют и кто стреляет (UnitAnimator-подписчик)
 
-        _targetUnit.Damage(10); // ДЛЯ ТЕСТА УЩЕРБ БУДЕТ 10. В дальнейшем будем брать этот показатель из оружия //НАДО НАСТРОИТЬ//
+        // Вычислить попадание или промах
+        _hit = UnityEngine.Random.Range(0, 1f) < GetHitPercent(_targetUnit);
+
+        Transform bulletProjectilePrefabTransform = Instantiate(_bulletProjectilePrefab, _shootPointTransform.position, Quaternion.identity); // Создадим префаб пули в точке выстрела
+        BulletProjectile bulletProjectile = bulletProjectilePrefabTransform.GetComponent<BulletProjectile>(); // Вернем компонент BulletProjectile созданной пули
+        Vector3 targetUnitWorldPosition = _targetUnit.GetWorldPosition(); // Мировая позиция целевого юнита. 
+        float unitShoulderHeight = 1.7f; // Высота плеча юнита,
+        targetUnitWorldPosition.y += unitShoulderHeight; // В результате ПУЛЯ будет выпущенна в голову врага
+
+        if (_hit) // Если попали то
+        {
+            bulletProjectile.Setup(targetUnitWorldPosition); // В аргумент предали Мировую позицию целевого юнита. с преобразовоной координатой по У
+            _targetUnit.Damage(10); // ДЛЯ ТЕСТА УЩЕРБ БУДЕТ 10. В дальнейшем будем брать этот показатель из оружия //НАДО НАСТРОИТЬ//
+        }
+        else // Если промах
+        {          
+            //Рандомно сместим по X Z
+            targetUnitWorldPosition.x += UnityEngine.Random.Range(0.5f, 0.8f);
+            targetUnitWorldPosition.z += UnityEngine.Random.Range(0.5f, 0.8f);
+            bulletProjectile.Setup(targetUnitWorldPosition); // В аргумент предали Мировую позицию целевого юнита. с преобразовоной координатой по У
+        }
+    }
+
+    public float GetHitPercent(Unit enemyUnit) // Получите процент попадания по врагу (в аргумент передаем врага)
+    {
+        _hitPercent = 1f; //Установим Процент попадания МАКСИМАЛЬНЫМ 100%
+
+        // ПРОВЕРИМ НА ПРОСТРЕЛИВАЕМОСТЬ до цели
+        Vector3 unitWorldPosition = _unit.GetWorldPosition(); // Получим мировые координаты Юнита
+        Vector3 enemyUnitWorldPosition = enemyUnit.GetWorldPosition(); //Получим мировые координаты ЮнитаВРАГА
+        Vector3 shototDirection = (enemyUnitWorldPosition - unitWorldPosition).normalized; //Нормализованный Вектор Направления стрельбы
+        RaycastHit hitInfo; // Структура, используемая для получения информации обратно из raycast.
+
+        float unitShoulderHeight = 1.7f; // Высота плеча юнита, в дальнейшем будем реализовывать приседание и половинчатые укрытия
+        if (Physics.Raycast(
+                unitWorldPosition + Vector3.up * unitShoulderHeight,
+                shototDirection,
+                out hitInfo,
+                Vector3.Distance(unitWorldPosition, enemyUnitWorldPosition),
+                _smokeAndCoverLayerMask)) // Если луч попал в Smoke или CoverObject (Raycast -вернет bool переменную, и код в скобках выполниться)
+        {
+            CoverObject coverObject = hitInfo.collider.GetComponent<CoverObject>(); // Получим на колайдере, в который попали, компонент CoverObject - Объект укрытия
+            switch (coverObject.GetCoverType())
+            {
+                case CoverType.Full: // Если укрытие Полное то уменьшим точность на 50%
+                    _hitPercent -= .5f;
+                    break;
+                case CoverType.Half: // Если укрытие Не полное то уменьшим точность на 25%
+                    _hitPercent -= .25f;
+                    break;
+            }
+        }
+
+        return _hitPercent;
     }
 
     public override string GetActionName() // Получим имя для кнопки

@@ -17,7 +17,7 @@ public class HandleAnimationEvents : MonoBehaviour // Обработчик Анимационных со
     private void Start()
     {
         //Unit unit = GetComponentInParent<Unit>(); // Получим компонент Unit на родителе 
-        if (_unit != null) // Если югит существует
+        if (_unit != null) // Если юнит существует
         {
             _unit.TryGetComponent<HealAction>(out HealAction healAction);// Попробуем на Юните получить компонент HealAction и если получиться сохраним в healAction
             _healAction = healAction;

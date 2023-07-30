@@ -3,51 +3,47 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует BaseAction
+public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует BaseAction
+                                                 // abstract - НЕ позволяет создать Instance (экземпляр) этого класса.
 {
-
     public event EventHandler OnGrenadeActionStarted;     // Действие Бросок Гранаты Началось    
     public event EventHandler OnGrenadeActionCompleted;   // Действие Бросок Гранаты Закончилочь
-
-    private enum State
+    protected enum State
     {
         GrenadeBefore, //До Бросока Гранаты (подоготовка)
         GrenadeInstantiate, //Создание гранаты
         GrenadeAfter,  //После Бросока Гранаты
     }
 
+    [SerializeField] protected LayerMask _obstaclesAndDoorLayerMask; //маска слоя препятствия и двери (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Obstacles и DoorInteract MousePlane(пол для нескольких этажей) // ВАЖНО НА ВСЕХ СТЕНАХ В ИГРЕ УСТАНОВИТЬ МАСКУ СЛОЕВ -Obstacles, а на дверях -DoorInteract
+    [SerializeField] protected Transform _grenadeProjectilePrefab; // Префаб Снаряд Гранаты // В префабе юнита закинуть префаб гранаты
+    [SerializeField] protected Transform _grenadeSpawnTransform; // Трансформ создания гранаты // В префабе юнита закинуть префаб гранаты
 
-    private State _state; // Состояние юнита
-    private float _stateTimer; //Таймер состояния
-
-
-    [SerializeField] private Transform _grenadeProjectilePrefab; // Префаб Снаряд Гранаты // В префабе юнита закинуть префаб гранаты
-    [SerializeField] private Transform _grenadeSpawnTransform; // Трансформ создания гранаты // В префабе юнита закинуть префаб гранаты
-    [SerializeField] private LayerMask _obstaclesAndDoorLayerMask; //маска слоя препятствия и двери (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Obstacles и DoorInteract MousePlane(пол для нескольких этажей) // ВАЖНО НА ВСЕХ СТЕНАХ В ИГРЕ УСТАНОВИТЬ МАСКУ СЛОЕВ -Obstacles, а на дверях -DoorInteract
+    protected State _state; // Состояние юнита
+    protected float _stateTimer; //Таймер состояния      
 
 
-    private int _maxThrowDistance = 7; //Максимальная дальность броска //НУЖНО НАСТРОИТЬ//
-
-    private GrenadeProjectile _grenadeProjectile;
-    private HandleAnimationEvents _handleAnimationEvents; // Обработчик Анимационных событий
-    private GridPosition _targetGridPositin;
+    protected int _maxThrowDistance = 7; //Максимальная дальность броска //НУЖНО НАСТРОИТЬ//
+    protected GridPosition _targetGridPositin;
+    protected GrenadeProjectile _grenadeProjectile;
+    protected HandleAnimationEvents _handleAnimationEvents; // Обработчик Анимационных событий
 
     protected override void Awake()
     {
         base.Awake();
 
-        _grenadeProjectile = _grenadeProjectilePrefab.GetComponent<GrenadeProjectile>();
-
         _handleAnimationEvents = GetComponentInChildren<HandleAnimationEvents>();
+        _grenadeProjectile = _grenadeProjectilePrefab.GetComponent<GrenadeProjectile>();
     }
 
-    private void Start()
+    protected void Start()
     {
         _handleAnimationEvents.OnAnimationTossGrenadeEventStarted += _handleAnimationEvents_OnAnimationTossGrenadeEventStarted; // Подпишемся на событие "В анимации "Бросок гранаты" стартовало событие"
     }
 
+    public abstract void _handleAnimationEvents_OnAnimationTossGrenadeEventStarted(object sender, EventArgs e); // abstract - вынуждает реализовывать в каждом подклассе и в базовом должно иметь пустое тело.
 
-    private void Update()
+    protected void Update()
     {
         if (!_isActive) // Если не активны то ...
         {
@@ -80,13 +76,13 @@ public class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует BaseActio
                 break;
         }
 
-        if (_stateTimer <= 0) // По истечению времени вызовим NextState() которая в свою очередь переключит состояние. Например - у меня было State.Aiming: тогда в case State.Aiming: переключу на State.Shooting;
+        if (_stateTimer <= 0) // По истечению времени вызовим NextState() которая в свою очередь переключит состояние. Например - у меня было TypeGrenade.Aiming: тогда в case TypeGrenade.Aiming: переключу на TypeGrenade.Shooting;
         {
             NextState(); //Следующие состояние
         }
     }
 
-    private void NextState() //Автомат переключения состояний
+    protected void NextState() //Автомат переключения состояний
     {
         switch (_state)
         {
@@ -106,12 +102,6 @@ public class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует BaseActio
         }
 
         //Debug.Log(_state);
-    }
-
-
-    public override string GetActionName() // Присвоить базовое действие //целиком переопределим базовую функцию
-    {
-        return "Grenade";
     }
 
     public override EnemyAIAction GetEnemyAIAction(GridPosition gridPosition) //Получить действие вражеского ИИ // Переопределим абстрактный базовый метод
@@ -156,12 +146,13 @@ public class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует BaseActio
                         continue;
                     }*/
 
-                    int pathfindingDistanceMultiplier = 10; // множитель расстояния определения пути (в классе PathfindingMonkey задаем стоимость смещения по клетке и она равна прямо 10 по диогонали 14, поэтому умножем наш множитель на количество клеток)
+                    //МНОГО ЖРЕТ РЕСУРСОВ
+                    /*int pathfindingDistanceMultiplier = 10; // множитель расстояния определения пути (в классе PathfindingMonkey задаем стоимость смещения по клетке и она равна прямо 10 по диогонали 14, поэтому умножем наш множитель на количество клеток)
                     if (PathfindingMonkey.Instance.GetPathLength(unitGridPosition, testGridPosition) > _maxThrowDistance * pathfindingDistanceMultiplier) //Исключим сеточные позиции - Если растояние до тестируемой клетки больше расстояния которое Юнит может преодолеть за один ход
                     {
                         // Длина пути слишком велика
                         continue;
-                    }
+                    }*/
 
                     // ПРОВЕРИМ НА возможность броска через препятствия
                     Vector3 worldTestGridPosition = LevelGrid.Instance.GetWorldPosition(testGridPosition);   // Получим мировые координаты тестируемой сеточной позиции 
@@ -180,14 +171,14 @@ public class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует BaseActio
                     }
 
                     //Исключим сеточные позиции которые висят в воздухе
-                    if (PathfindingMonkey.Instance.GetGridPositionInAirList().Contains(testGridPosition)) 
+                    if (PathfindingMonkey.Instance.GetGridPositionInAirList().Contains(testGridPosition))
                     {
                         continue;
                     }
 
 
                     validGridPositionList.Add(testGridPosition); // Добавляем в список те позиции которые прошли все тесты
-                                                                 
+
                     //Debug.Log(testGridPosition);
                 }
             }
@@ -195,11 +186,9 @@ public class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует BaseActio
         return validGridPositionList;
     }
 
-
-
     public override void TakeAction(GridPosition gridPosition, Action onActionComplete)  // Переопределим TakeAction (Применить Действие (Действовать). (Делегат onActionComplete - по завершении действия). в нашем случае делегату передаем функцию ClearBusy - очистить занятость
     {
-        _state = State.GrenadeBefore; // Активируем состояние Подготовки до ГРАНАТЫ
+        _state = State.GrenadeBefore; // Активируем состояние Подготовки ГРАНАТЫ
         float beforeGrenadeStateTime = 0.5f; //До ГРАНАТЫ.  Для избежания магических чисель введем переменную  Продолжительность Состояния подготовки перед ГРАНАТОЙ ..//НУЖНО НАСТРОИТЬ//
         _stateTimer = beforeGrenadeStateTime;
 
@@ -209,21 +198,13 @@ public class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует BaseActio
 
         ActionStart(onActionComplete); // Вызовим базовую функцию СТАРТ ДЕЙСТВИЯ // Вызываем этот метод в конце после всех настроек т.к. в этом методе есть EVENT и он должен запускаться после всех настроек
     }
-
-    private void _handleAnimationEvents_OnAnimationTossGrenadeEventStarted(object sender, EventArgs e)
-    {
-        Transform grenadeProjectileTransform = Instantiate(_grenadeProjectilePrefab, _grenadeSpawnTransform.position, Quaternion.identity); // Создадим префаб гранаты 
-        GrenadeProjectile grenadeProjectile = grenadeProjectileTransform.GetComponent<GrenadeProjectile>(); // Возьмем у гранаты компонент GrenadeProjectile
-        grenadeProjectile.Setup(_targetGridPositin, OnGrenadeBehaviorComplete); // И вызовим функцию Setup() передав в нее целевую позицию (сеточныая позиция курсора мыши) и передадим в делегат функцию OnGrenadeBehaviorComplete ( при взрыве гранаты будем вызывать эту функцию)
-    }
-
-    private void OnGrenadeBehaviorComplete() // Промежуточный метод который возвращает ActionComplete() . Хотя можно использовать ActionComplete() напрямую но можно запутаться в названиях
+    protected void OnGrenadeBehaviorComplete() // Промежуточный метод который возвращает ActionComplete() . Хотя можно использовать ActionComplete() напрямую но можно запутаться в названиях
     {
         OnGrenadeActionCompleted?.Invoke(this, EventArgs.Empty); // Запустим событие Действие Бросок Гранаты закончилось Подписчик UnitAnimator
         ActionComplete(); // эта функция выполняет - Очистить занятость или стать свободным - активировать кнопки UI
     }
 
-    public int GetMaxThrowDistance()//Раскроем _maxHealDistance
+    public int GetMaxThrowDistance()//Раскроем 
     {
         return _maxThrowDistance;
     }
@@ -231,12 +212,10 @@ public class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует BaseActio
     public float GetDamageRadiusInWorldPosition() => _grenadeProjectile.GetDamageRadiusInWorldPosition(); // Сквозная функция
     public int GetDamageRadiusInCells() => _grenadeProjectile.GetDamageRadiusInCells(); // Сквозная функция
 
-
-    private void OnDestroy()
+    protected void OnDestroy()
     {
         _handleAnimationEvents.OnAnimationTossGrenadeEventStarted -= _handleAnimationEvents_OnAnimationTossGrenadeEventStarted; // Отпишемя от события чтобы не вызывались функции в удаленных объектах.
     }
-
 }
 
 // https://community.gamedev.tv/t/grenade-can-be-thrown-through-wall/205331 БРОСАНИЕ ГРАНАТЫ ЧЕРЕЗ СТЕНЫ

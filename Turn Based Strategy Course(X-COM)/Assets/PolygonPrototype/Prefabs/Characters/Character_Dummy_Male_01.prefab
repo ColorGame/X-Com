@@ -908,6 +908,7 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &9052874676761353846
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -920,8 +921,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e60741deda6ba14458a8c88f97b3b266, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _cureVFXPrefab: {fileID: 6125734487752806136, guid: ea525c46fa75a60409d72ef0fc841334,
-    type: 3}
+  _healVFXPrefab: {fileID: 0}
   _unit: {fileID: 0}
 --- !u!1 &1326360802897878
 GameObject:
@@ -2480,37 +2480,6 @@ Transform:
   m_Father: {fileID: 3788409931833284006}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1181547162872833306
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8999320913502101676}
-  m_Layer: 7
-  m_Name: ShootPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &8999320913502101676
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1181547162872833306}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0, y: 0.088, z: 0.74}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 4620996652967205}
-  m_RootOrder: 3
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2293858040105578904
 GameObject:
   m_ObjectHideFlags: 0
@@ -2761,7 +2730,7 @@ PrefabInstance:
     - target: {fileID: 8999320913502101676, guid: c25ac4fdc903e7d49a7520930673ecd6,
         type: 3}
       propertyPath: m_RootOrder
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c25ac4fdc903e7d49a7520930673ecd6, type: 3}

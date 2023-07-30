@@ -269,6 +269,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08dc9528bdf4eb0499f405bffd372234, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _typeGrenade: 1
   _moveSpeed: 15
   _damageAmount: 45
   _damageRadiusInCells: 1
@@ -297,6 +298,8 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   _grenadeExplosionVfxPrefab: {fileID: 6125734487752806136, guid: cd82db3c69485304186c77a2c1ed7066,
+    type: 3}
+  _grenadeSmokeVfxPrefab: {fileID: 7478375647431571239, guid: 8bf33e12d9a51a7488a498bbbd48666e,
     type: 3}
   _trailRenderer: {fileID: 4439614913397698267}
   _arcYAnimationCurve:
