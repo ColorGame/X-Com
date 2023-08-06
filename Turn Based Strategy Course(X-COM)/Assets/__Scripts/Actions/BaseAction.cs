@@ -65,7 +65,7 @@ public abstract class BaseAction : MonoBehaviour    //Базовое Действие Этот клас
         return _unit;
     }
 
-    public EnemyAIAction GetBestEnemyAIAction() // Получим Лучшее действие Вражеского ИИ
+    public EnemyAIAction GetBestEnemyAIAction() // Получим Лучшее действие Вражеского ИИ для выбранного действия
     {
         List<EnemyAIAction> enemyAIActionList = new List<EnemyAIAction>(); // Список Действий Вражеского ИИ
 

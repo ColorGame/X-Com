@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnitActionSystem;
 
 public class IsLocked : MonoBehaviour // При взаимодействии с дверью, если ее нельзя открыть, появить надпись "Заперта"
 {
@@ -20,9 +21,9 @@ public class IsLocked : MonoBehaviour // При взаимодействии с дверью, если ее не
         Show(); 
     }
     
-    private void UnitActionSystem_OnBusyChanged(object sender, bool isBusy)
+    private void UnitActionSystem_OnBusyChanged(object sender, OnUnitSystemEventArgs e)
     {
-        if (!isBusy) // Когда игрок освобождается то скроем надпись
+        if (!e.isBusy) // Когда игрок освобождается то скроем надпись
         {
             Hide();
         }

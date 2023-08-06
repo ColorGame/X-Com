@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI; // Для работы с Пользовательским интерфейсом
+using static UnitActionSystem;
 
 public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // Динамически создавать кнопки при выборе юнита // Лежит в Canvas
 {
@@ -16,13 +18,13 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
 
     private void Awake()
     {
-        _actionButtonUIList = new List<ActionButtonUI> (); // Создадим экземпляр списка
+        _actionButtonUIList = new List<ActionButtonUI>(); // Создадим экземпляр списка
     }
 
     private void Start()
     {
         UnitActionSystem.Instance.OnSelectedUnitChanged += UnitActionSystem_OnSelectedUnitChanged; //Выбранный Юнит Изменен// подписываемся на Event из UnitActionSystem (становимся слушателями). Обозначает что мы выполняем функцию UnitActionSystem_OnSelectedUnitChanged()
-                                                                                              
+
         UnitActionSystem.Instance.OnSelectedActionChanged += UnitActionSystem_OnSelectedActionChanged; //Выбранное Действие Изменено// подписываемся на Event Будет выполняться каждый раз когда мы меняем Базовое Действие // 
 
         UnitActionSystem.Instance.OnActionStarted += UnitActionSystem_OnActionStarted; // Действие Начато// подписываемся на Event// Будет выполняться каждый раз при старте действия. //
@@ -33,7 +35,7 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
         TurnSystem.Instance.OnTurnChanged += TurnSystem_OnTurnChanged; // Изменен номер хода подписываемся на Event // Будет выполняться (изминение текста очков действий).
         // РЕШЕНИЕ 2 //{
         Unit.OnAnyActionPointsChanged += Unit_OnAnyActionPointsChanged; //Изменении очков действий у ЛЮБОГО(Any) юнитаподписываемся на статический Event // Буудет выполняться каждый раз при изменении очков действий у ЛЮБОГО(Any) юнита а не только у выбранного.
-        // РЕШЕНИЕ 2 //}
+        // РЕШЕНИЕ 2 //}             
 
         CreateUnitActionButtons();
         UpdateSelectedVisual();
@@ -64,14 +66,25 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
     } //2//}*/
 
     //3//{ Третий способ скрыть кнопки когда занят действием
-    private void UnitActionSystem_OnBusyChanged(object sender, bool isBusy)
-    {
-        foreach (ActionButtonUI actionButtonUI in _actionButtonUIList) // В цикле обработаем состояние кнопок
+    private void UnitActionSystem_OnBusyChanged(object sender, OnUnitSystemEventArgs e) 
+    {   
+        if (e.selectedAction is ComboAction) // Если выполняется Комбо Сделаем проверку
         {
-            actionButtonUI.HandleStateButton(isBusy);
+            ComboAction comboAction = (ComboAction)e.selectedAction;
+            ComboAction.State state = comboAction.GetState();
+
+            switch (state)
+            {
+                case ComboAction.State.ComboSearchEnemy: // Если ишу врага то кнопки должны быть скрытыми
+                case ComboAction.State.ComboStart:
+                    return; // выходим и игнорируем код ниже
+            }            
         }
 
-
+        foreach (ActionButtonUI actionButtonUI in _actionButtonUIList) // В цикле обработаем состояние кнопок
+        {
+            actionButtonUI.HandleStateButton(e.isBusy);
+        }
     } //3//}
 
 
@@ -79,10 +92,10 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
     {
         foreach (Transform buttonTransform in _actionButtonContainerTransform) // Очистим контейнер с кнопками
         {
-            Destroy (buttonTransform.gameObject); // Удалим игровой объект прикрипленный к Transform
+            Destroy(buttonTransform.gameObject); // Удалим игровой объект прикрипленный к Transform
         }
 
-        _actionButtonUIList.Clear (); // Очистим сисок кнопок
+        _actionButtonUIList.Clear(); // Очистим сисок кнопок
 
         Unit selectedUnit = UnitActionSystem.Instance.GetSelectedUnit(); // Получим выбранного юнита
 
@@ -91,15 +104,15 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
             Transform actionButtonTransform = Instantiate(_actionButtonPrefab, _actionButtonContainerTransform); // Для каждого baseAction создадим префаб кнопки и назначим родителя - Контейнер для кнопок
             ActionButtonUI actionButtonUI = actionButtonTransform.GetComponent<ActionButtonUI>(); // У кнопки найдем компонент ActionButtonUI
             actionButtonUI.SetBaseAction(baseAction); //Назвать и Присвоить базовое действие (нашей кнопке)
-            
-            _actionButtonUIList.Add (actionButtonUI); // Добавим в список полученный компонент ActionButtonUI
+
+            _actionButtonUIList.Add(actionButtonUI); // Добавим в список полученный компонент ActionButtonUI
         }
     }
 
     private void UnitActionSystem_OnSelectedUnitChanged(object sender, EventArgs empty) //sender - отправитель // Подписка должна иметь туже сигнатуру что и функция отправителя OnSelectedUnitChanged
     {
         CreateUnitActionButtons(); // Создать Кнопки для Действий Юнита 
-        UpdateSelectedVisual(); 
+        UpdateSelectedVisual();
         UpdateActionPoints();
     }
 
@@ -123,7 +136,7 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
     private void UpdateActionPoints() // Обнавление очков действий (над кнопками действий)
     {
         Unit selectedUnit = UnitActionSystem.Instance.GetSelectedUnit();// Возьмем выбранного юнита
-        
+
         _actionPointsText.text = "Action Points; " + selectedUnit.GetActionPoints(); //Изменим текст добавив в него количество очков
     }
 

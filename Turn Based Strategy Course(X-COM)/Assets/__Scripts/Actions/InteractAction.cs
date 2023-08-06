@@ -97,5 +97,9 @@ public class InteractAction : BaseAction // Действие взаимодействия
         
     }
 
+    public int GetMaxInteractDistance()
+    {
+        return _maxInteractDistance;
+    }
 }
 

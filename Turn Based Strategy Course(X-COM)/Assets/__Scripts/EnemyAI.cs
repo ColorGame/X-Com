@@ -120,6 +120,7 @@ public class EnemyAI : MonoBehaviour // Искуственный интелект юнита
         if (bestEnemyAIAction != null && enemyUnit.TrySpendActionPointsToTakeAction(bestBaseAction)) // ПОПРОБУЕМ Потратить Очки Действия, Чтобы Выполнить Действие 
         {
             bestBaseAction.TakeAction(bestEnemyAIAction.gridPosition, onEnemyAIActionComplete); //У выбранного действия вызовим метод "Применить Действие (Действовать)" и передадим в делегат функцию SetStateTakingTurn  который вернет нас опять в исходное состояние TakingTurn
+            UnitActionSystem.Instance.SetSelectedAction(bestBaseAction); // Сделаем это действие выделенным
             return true; // Если можем что то сделать то вернем ИСТИНА
         }
         else

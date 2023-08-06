@@ -6,12 +6,15 @@ using UnityEngine;
 public class BulletProjectile : MonoBehaviour // Снаряд пули
 {
     [SerializeField] private TrailRenderer _trailRenderer; // в инспекторе закинуть трэил пули он лежит в самой пули // у TRAIL незабудь поставить галочку Autodestruct
-    [SerializeField] private Transform _bulletHitVfxPrefab; // в инспекторе закинуть систему частиц (искры от попадпния)
+    [SerializeField] private Transform _bulletHitFXPrefab; // в инспекторе закинуть систему частиц (искры от попадпния)
 
     private Vector3 _targetPosition; // Целевая позиция пули
-    public void Setup(Vector3 targetPosition) // Настроика пули
+    private bool _hit; // Попал или промазал
+
+    public void Setup(Vector3 targetPosition, bool hit) // Настроика пули
     {
         _targetPosition = targetPosition;
+        _hit = hit;
     }
 
     private void Update()
@@ -38,8 +41,11 @@ public class BulletProjectile : MonoBehaviour // Снаряд пули
             _trailRenderer.transform.parent = null; // Отсоеденим трэйл от родителя что бы он еще жил. А в инсепкторе поставим галочку Autodestruct - уничтожение после завершения ортрисовки
 
             Destroy(gameObject);
-
-            Instantiate(_bulletHitVfxPrefab, _targetPosition, Quaternion.identity); // Создадим префаб частиц (Не забудь в инспекторе включить у частиц Stop Action - Destroy)
+            
+            if (_hit) //Если попали то создадим частички
+            {
+                Instantiate(_bulletHitFXPrefab, _targetPosition, Quaternion.identity); // Создадим префаб частиц (Не забудь в инспекторе включить у частиц Stop Action - Destroy)
+            }
         }
     }
 }

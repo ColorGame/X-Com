@@ -5,8 +5,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Burst.Intrinsics;
+using Unity.VisualScripting;
 using UnityEngine;
 using static GridSystemVisual;
+using static UnitActionSystem;
 
 
 // Добавим GridSystemVisual для запуска после времени по умолчанию, поскольку мы хотим, чтобы визуальные эффекты запускались после всего остального.
@@ -27,10 +29,13 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
     {
         White,
         Blue,
+        BlueSoft,
         Red,
         RedSoft,
         Yellow,
-        Green
+        YellowSoft,
+        Green,
+        GreenSoft,
     }
 
 
@@ -41,6 +46,7 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
 
 
     private List<GridPosition> _validActionGridPositionForGrenadeActionList; // Будем кэшировоть -Список Допустимых сеточных позиций для действия Гранаты 
+    private List<GridPosition> _validActionGridPositionForComboActionList; // Будем кэшировоть -Список Допустимых сеточных позиций для действия комбо
 
     private GridSystemVisualSingle[,,] _gridSystemVisualSingleArray; // Трехмерный массив    
 
@@ -106,7 +112,6 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
     }
 
 
-
     // Для отладки шестигранной сетки (отображение ячейки под мышкой)
     /*private void Update()
     {
@@ -130,38 +135,77 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
     }*/
 
 
-    private void Instance_OnBusyChanged(object sender, bool e)
+    private void Instance_OnBusyChanged(object sender, OnUnitSystemEventArgs e)
     {
         UpdateGridVisual();
     }
 
     private void MouseWorld_OnMouseGridPositionChanged(object sender, MouseWorld.OnMouseGridPositionChangedEventArgs e)
     {
-        // При изминении положении мыши будем обновлять отображение круга, который показывает радиус действия гранаты
+        // При изминении положении мыши будем обновлять отображение круга или квадрата, который показывает радиус действия гранаты
 
         BaseAction selectedAction = UnitActionSystem.Instance.GetSelectedAction(); // Получим Выбранное Действие
 
         switch (selectedAction) // Переключатель состояний визуала в зависимости от Выбранного Действия
         {
-            case GrenadeAction grenadeAction:// Во время кидания ГРАНАТЫ
+            case GrenadeFragmentationAction grenadeFragmentationAction:// Во время кидания ГРАНАТЫ
 
-                _gridSystemVisualSingleArray[e.lastMouseGridPosition.x, e.lastMouseGridPosition.z, e.lastMouseGridPosition.floor].HideСircle(); // Скроем круг на предыдущей ячейки
-
-                GridPosition mouseGridPosition = e.newMouseGridPosition; // Сеточная позиция мыши
-
-                if (_validActionGridPositionForGrenadeActionList.Contains(mouseGridPosition)) // Если Сеточная позиция мыши входит в Допустимый диапазон то ...
-                {
-                    float halfCentralCell = 0.5f; // Половина центральной ячейки
-                    float damageRadiusInWorldPosition = (grenadeAction.GetDamageRadiusInCells() + halfCentralCell) * LevelGrid.Instance.GetCellSize(); // Радиус повреждения от гранаты = Радиус повреждения в Ячейках сетки(с учетом центральной ячейки) * размер ячейки
-
-                    _gridSystemVisualSingleArray[mouseGridPosition.x, mouseGridPosition.z, mouseGridPosition.floor].ShowСircle(damageRadiusInWorldPosition); // Покажем для нашей сеточной позиции круг поражения от гранаты и передадим радиус круга
-                }
+                UpdateVisualDamageCircleGrenade(grenadeFragmentationAction, e);
                 break;
 
+            case GrenadeStunAction grenadeStunAction:// Во время кидания ГРАНАТЫ
+
+                UpdateVisualDamageCircleGrenade(grenadeStunAction, e);
+                break;
+
+            case GrenadeSmokeAction grenadeSmokeAction:
+
+                UpdateVisualDamageQuadGrenade(grenadeSmokeAction, e);
+                break;
+
+            case ComboAction comboAction:
+                if (comboAction.GetState() == ComboAction.State.ComboStart)
+                {
+                    UpdateVisualSelectedQuadComboAction(comboAction, e);
+                }                
+                break;
         }
     }
 
+    private void UpdateVisualSelectedQuadComboAction(ComboAction comboAction, MouseWorld.OnMouseGridPositionChangedEventArgs e)
+    {        
+        _gridSystemVisualSingleArray[e.lastMouseGridPosition.x, e.lastMouseGridPosition.z, e.lastMouseGridPosition.floor].HideQuad(); // Скроем квадрат на предыдущей ячейки
+        GridPosition mouseGridPosition = e.newMouseGridPosition; // Сеточная позиция мыши
 
+        if (_validActionGridPositionForComboActionList.Contains(mouseGridPosition)) // Если Сеточная позиция мыши входит в Допустимый диапазон то ...
+        {            
+            _gridSystemVisualSingleArray[mouseGridPosition.x, mouseGridPosition.z, mouseGridPosition.floor].ShowQuad(GetGridVisualTypeMaterial(GridVisualType.Red)); // Покажем для нашей сеточной позиции квадрат красного цвета
+        }
+    }
+
+    private void UpdateVisualDamageQuadGrenade(GrenadeAction grenadeAction, MouseWorld.OnMouseGridPositionChangedEventArgs e)
+    {
+        _gridSystemVisualSingleArray[e.lastMouseGridPosition.x, e.lastMouseGridPosition.z, e.lastMouseGridPosition.floor].HideQuad(); // Скроем квадрат на предыдущей ячейки
+        GridPosition mouseGridPosition = e.newMouseGridPosition; // Сеточная позиция мыши
+
+        if (_validActionGridPositionForGrenadeActionList.Contains(mouseGridPosition)) // Если Сеточная позиция мыши входит в Допустимый диапазон то ...
+        {
+            float damageRadiusInWorldPosition = grenadeAction.GetDamageRadiusInWorldPosition();
+            _gridSystemVisualSingleArray[mouseGridPosition.x, mouseGridPosition.z, mouseGridPosition.floor].ShowQuad(GetGridVisualTypeMaterial(GridVisualType.RedSoft), damageRadiusInWorldPosition); // Покажем для нашей сеточной позиции квадрат поражения от гранаты и передадим размер  и цвет материала
+        }
+    }
+
+    private void UpdateVisualDamageCircleGrenade(GrenadeAction grenadeAction, MouseWorld.OnMouseGridPositionChangedEventArgs e)
+    {
+        _gridSystemVisualSingleArray[e.lastMouseGridPosition.x, e.lastMouseGridPosition.z, e.lastMouseGridPosition.floor].HideСircle(); // Скроем круг на предыдущей ячейки
+        GridPosition mouseGridPosition = e.newMouseGridPosition; // Сеточная позиция мыши
+
+        if (_validActionGridPositionForGrenadeActionList.Contains(mouseGridPosition)) // Если Сеточная позиция мыши входит в Допустимый диапазон то ...
+        {
+            float damageRadiusInWorldPosition = grenadeAction.GetDamageRadiusInWorldPosition();
+            _gridSystemVisualSingleArray[mouseGridPosition.x, mouseGridPosition.z, mouseGridPosition.floor].ShowСircle(damageRadiusInWorldPosition); // Покажем для нашей сеточной позиции круг поражения от гранаты и передадим радиус круга
+        }
+    }
 
     private void HideAllGridPosition() // Скрыть все позиции сетки
     {
@@ -176,8 +220,6 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
             }
         }
     }
-
-
 
     private void ShowGridPositionRange(GridPosition gridPosition, int range, GridVisualType gridVisualType, bool showFigureRhombus) // Показать возможный Диапазон Сеточных Позиций для стрельбы (в аргументе передаем Сеточную позицию, Радиус стрельбы, Тип состояния Визуала Сетки, Булевая переменная если надо отобразить в виде Ромба то передаем true, если в виде КВАДРАТА то - false )
     {
@@ -205,6 +247,12 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
                     {
                         continue;
                     }
+                }
+
+                //Исключим сеточные позиции которые висят в воздухе
+                if (PathfindingMonkey.Instance.GetGridPositionInAirList().Contains(testGridPosition))
+                {
+                    continue;
                 }
 
                 gridPositionList.Add(testGridPosition);
@@ -238,60 +286,64 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
             default: // Этот кейс будет выполняться по умолчанию если нет соответствующих selectedAction
             case MoveAction moveAction: // Во время ХОТЬБЫ -БЕЛЫЙ
                 gridVisualType = GridVisualType.White;
-
-                ShowGridPositionList(selectedAction.GetValidActionGridPositionList(), gridVisualType); // Покажем(включим) только те позиции которые нам передали (в аргумент передаем список допустимых позиций сетки выбранного действия, и Тип состояния визуализации который нам выдал switch)
                 break;
 
             case SpinAction spinAction: // Во время ПОВОРОТА -ГОЛУБОЙ
                 gridVisualType = GridVisualType.Blue;
-
-                ShowGridPositionList(selectedAction.GetValidActionGridPositionList(), gridVisualType); // Покажем(включим) только те позиции которые нам передали (в аргумент передаем список допустимых позиций сетки выбранного действия, и Тип состояния визуализации который нам выдал switch)
                 break;
 
             case HealAction healAction: // Во время ЛЕЧЕНИЯ -ЗЕЛЕНЫЙ
                 gridVisualType = GridVisualType.Green;
-
-                ShowGridPositionList(selectedAction.GetValidActionGridPositionList(), gridVisualType); // Покажем(включим) только те позиции которые нам передали (в аргумент передаем список допустимых позиций сетки выбранного действия, и Тип состояния визуализации который нам выдал switch)
+                ShowGridPositionRange(selectedUnit.GetGridPosition(), healAction.GetMaxHealDistance(), GridVisualType.GreenSoft, false); // Покажем диапазон 
                 break;
 
             case ShootAction shootAction: // Во время СТРЕЛЬБЫ -КРАСНЫЙ
                 gridVisualType = GridVisualType.Red;
-
-                ShowGridPositionRange(selectedUnit.GetGridPosition(), shootAction.GetMaxShootDistance(), GridVisualType.RedSoft, true); // Покажем диапазон стрельбы
-                ShowGridPositionList(selectedAction.GetValidActionGridPositionList(), gridVisualType); // Покажем(включим) только те позиции которые нам передали (в аргумент передаем список допустимых позиций сетки выбранного действия, и Тип состояния визуализации который нам выдал switch)
-
+                ShowGridPositionRange(selectedUnit.GetGridPosition(), shootAction.GetMaxShootDistance(), GridVisualType.RedSoft, true); // Покажем диапазон стрельбы РОМБ-true
                 break;
 
             case GrenadeAction grenadeAction:// Во время кидания ГРАНАТЫ -ЖЕЛТЫЙ
                 gridVisualType = GridVisualType.Yellow;
-
-                _validActionGridPositionForGrenadeActionList = selectedAction.GetValidActionGridPositionList(); //Сохраним -Список Допустимых сеточных позиций для действия Гранаты 
-
-                ShowGridPositionList(_validActionGridPositionForGrenadeActionList, gridVisualType); // Покажем(включим) только те позиции которые нам передали (в аргумент передаем список допустимых позиций сетки выбранного действия, и Тип состояния визуализации который нам выдал switch)
-
-                /* GridPosition mouseGridPosition = LevelGrid.Instance.GetGridPosition(MouseWorld.GetPositionOnlyHitVisible()); // Сеточная позиция мыши
-                 if (_validActionGridPositionForGrenadeActionList.Contains(mouseGridPosition)) // Если Сеточная позиция мыши входит в Допустимый диапазон то ...
-                 {
-                     ShowGridPositionRange(mouseGridPosition, grenadeAction.GetDamageRadiusInCells(), GridVisualType.Red, false); // Покажем радиус действия гранаты цвет КРАСНЫЙ
-                 }*/
+                _validActionGridPositionForGrenadeActionList = selectedAction.GetValidActionGridPositionList(); //Сохраним -Список Допустимых сеточных позиций для действия Гранаты                                 
                 break;
 
             case SwordAction swordAction: // Во время удара МЕЧОМ -красный
                 gridVisualType = GridVisualType.Red;
-
                 ShowGridPositionRange(selectedUnit.GetGridPosition(), swordAction.GetMaxSwordDistance(), GridVisualType.RedSoft, false); // Покажем диапазон удара
-                ShowGridPositionList(selectedAction.GetValidActionGridPositionList(), gridVisualType); // Покажем(включим) только те позиции которые нам передали (в аргумент передаем список допустимых позиций сетки выбранного действия, и Тип состояния визуализации который нам выдал switch)
                 break;
 
             case InteractAction interactAction: // Во время ВЗАИМОДЕЙСТВИЯ -ГОЛУБОЙ
                 gridVisualType = GridVisualType.Blue;
+                ShowGridPositionRange(selectedUnit.GetGridPosition(), interactAction.GetMaxInteractDistance(), GridVisualType.BlueSoft, false); // Покажем диапазон 
+                break;
 
-                ShowGridPositionList(selectedAction.GetValidActionGridPositionList(), gridVisualType); // Покажем(включим) только те позиции которые нам передали (в аргумент передаем список допустимых позиций сетки выбранного действия, и Тип состояния визуализации который нам выдал switch)
+            case ComboAction comboAction: // Во время Выбора комбо союзника -ЗЕЛЕНЫЙ    
+
+                ComboAction.State statecomboAction = comboAction.GetState(); // Получим состояние КОМБО 
+                switch (statecomboAction)
+                {
+                    default:
+                    case ComboAction.State.ComboSearchPartner: // Если ищем Партнера для комбо
+                        gridVisualType = GridVisualType.Green;
+                        ShowGridPositionRange(selectedUnit.GetGridPosition(), comboAction.GetMaxComboPartnerDistance(), GridVisualType.GreenSoft, false); // Покажем диапазон 
+                        break;
+
+                    case ComboAction.State.ComboSearchEnemy: // Если Ищем врага то
+                        gridVisualType = GridVisualType.Red;
+                        ShowGridPositionRange(selectedUnit.GetGridPosition(), comboAction.GetMaxComboEnemyDistance(), GridVisualType.RedSoft, true); // Покажем диапазон  РОМБ-true
+                        break;
+
+                    case ComboAction.State.ComboStart:
+                        gridVisualType = GridVisualType.RedSoft;
+                        _validActionGridPositionForComboActionList = selectedAction.GetValidActionGridPositionList();
+                        break;
+
+                }
+
                 break;
         }
 
-        //Перенес в каждый case
-        //ShowGridPositionList(selectedAction.GetValidActionGridPositionList(), gridVisualType); // Покажем(включим) только те позиции которые нам передали (в аргумент передаем список допустимых позиций сетки выбранного действия, и Тип состояния визуализации который нам выдал switch)
+        ShowGridPositionList(selectedAction.GetValidActionGridPositionList(), gridVisualType); // Покажем(включим) только те позиции которые нам передали (в аргумент передаем список допустимых позиций сетки выбранного действия, и Тип состояния визуализации который нам выдал switch)
     }
 
     private void UnitActionSystem_OnSelectedActionChanged(object sender, EventArgs e)

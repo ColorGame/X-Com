@@ -15,7 +15,7 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
         GrenadeAfter,  //После Бросока Гранаты
     }
 
-    [SerializeField] protected LayerMask _obstaclesAndDoorLayerMask; //маска слоя препятствия и двери (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Obstacles и DoorInteract MousePlane(пол для нескольких этажей) // ВАЖНО НА ВСЕХ СТЕНАХ В ИГРЕ УСТАНОВИТЬ МАСКУ СЛОЕВ -Obstacles, а на дверях -DoorInteract
+    [SerializeField] protected LayerMask _obstaclesDoorMousePlaneLayerMask; //маска слоя препятствия и двери (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Obstacles и DoorInteract MousePlane(пол для нескольких этажей) и // ВАЖНО НА ВСЕХ СТЕНАХ В ИГРЕ УСТАНОВИТЬ МАСКУ СЛОЕВ -Obstacles, а на дверях -DoorInteract
     [SerializeField] protected Transform _grenadeProjectilePrefab; // Префаб Снаряд Гранаты // В префабе юнита закинуть префаб гранаты
     [SerializeField] protected Transform _grenadeSpawnTransform; // Трансформ создания гранаты // В префабе юнита закинуть префаб гранаты
 
@@ -102,16 +102,7 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
         }
 
         //Debug.Log(_state);
-    }
-
-    public override EnemyAIAction GetEnemyAIAction(GridPosition gridPosition) //Получить действие вражеского ИИ // Переопределим абстрактный базовый метод
-    {
-        return new EnemyAIAction
-        {
-            gridPosition = gridPosition,
-            actionValue = 0, //Поставим низкое значение действия. Будет бросать гранату если ничего другого сделать не может, 
-        };
-    }
+    } 
 
     public override List<GridPosition> GetValidActionGridPositionList()// Получить Список Допустимых Сеточных Позиция для Действий // переопределим базовую функцию                                                                       
     {
@@ -119,7 +110,7 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
 
         GridPosition unitGridPosition = _unit.GetGridPosition(); // Получим позицию в сетке юнита
 
-        for (int x = -_maxThrowDistance; x <= _maxThrowDistance; x++) // Юнит это центр нашей позиции с координатами unitGridPosition, поэтому переберем допустимые значения в условном радиусе _maxHealDistance
+        for (int x = -_maxThrowDistance; x <= _maxThrowDistance; x++) // Юнит это центр нашей позиции с координатами unitGridPosition, поэтому переберем допустимые значения в условном радиусе _maxComboDistance
         {
             for (int z = -_maxThrowDistance; z <= _maxThrowDistance; z++)
             {
@@ -154,17 +145,17 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
                         continue;
                     }*/
 
-                    // ПРОВЕРИМ НА возможность броска через препятствия
+                    // ПРОВЕРИМ НА возможность броска через препятствия 
                     Vector3 worldTestGridPosition = LevelGrid.Instance.GetWorldPosition(testGridPosition);   // Получим мировые координаты тестируемой сеточной позиции 
                     Vector3 unitWorldPosition = LevelGrid.Instance.GetWorldPosition(unitGridPosition); // Переведем в мировые координаты переданную нам сеточную позицию Юнита  
                     Vector3 grenadeDirection = (worldTestGridPosition - unitWorldPosition).normalized; //Нормализованный Вектор Направления броска Гранаты
 
-                    float unitShoulderHeight = 1.7f; // Высота плеча юнита, в дальнейшем будем реализовывать приседание и половинчатые укрытия
+                    float heightRaycast = 2.5f; // Высота выстрела луча (делаю высоким что бы игнорировать низкие препядствия т.к. через них можно бросать гранатой) Через препятствия выше 2,5м бросать грнату НЕЛЬЗЯ (высота потолка 3м)
                     if (Physics.Raycast(
-                            unitWorldPosition + Vector3.up * unitShoulderHeight,
+                            unitWorldPosition + Vector3.up * heightRaycast,
                             grenadeDirection,
                             Vector3.Distance(unitWorldPosition, worldTestGridPosition),
-                            _obstaclesAndDoorLayerMask)) // Если луч попал в препятствие то (Raycast -вернет bool переменную)
+                            _obstaclesDoorMousePlaneLayerMask)) // Если луч попал в препятствие то (Raycast -вернет bool переменную) Cover слой игнорируем т.к. через укрытия можно бросать гранатой
                     {
                         // Мы заблоктрованны препятствием
                         continue;
@@ -215,6 +206,11 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
     protected void OnDestroy()
     {
         _handleAnimationEvents.OnAnimationTossGrenadeEventStarted -= _handleAnimationEvents_OnAnimationTossGrenadeEventStarted; // Отпишемя от события чтобы не вызывались функции в удаленных объектах.
+    }
+
+    public override int GetActionPointCost() // Переопределим базовую функцию // Получить Расход Очков на Действие (Стоимость действия)
+    {
+        return 2;
     }
 }
 

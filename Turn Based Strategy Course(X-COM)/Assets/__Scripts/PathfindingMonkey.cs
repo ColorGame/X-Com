@@ -25,7 +25,7 @@ public class PathfindingMonkey : MonoBehaviour // Поиск пути // Логика которая б
     private GridPosition LEFT = new(-1, 0);*/
 
     [SerializeField] private Transform _pathfindingGridDebugObject; // Префаб отладки сетки //Передоваемый тип должен совподать с типом аргумента метода CreateDebugObject
-    [SerializeField] private LayerMask _obstaclesLayerMask; // маска слоя препятствия (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Obstacles // ВАЖНО НА ВСЕХ СТЕНАХ В ИГРЕ УСТАНОВИТЬ МАСКУ СЛОЕВ -Obstacles кроме дверей
+    [SerializeField] private LayerMask _obstaclesCoverLayerMask; // маска слоя препятствия (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Obstacles и Cover// ВАЖНО НА ВСЕХ СТЕНАХ В ИГРЕ УСТАНОВИТЬ МАСКУ СЛОЕВ -Obstacles кроме дверей а на укрытиях Cover
     [SerializeField] private LayerMask _floorLayerMask; // маска слоя пола (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ MousePlane -это пол и есть
     [SerializeField] private Transform _pathfindingLinkContainer; // контейнер ссылок для поиска пути // В инспекторе закинуть из сцены PathfindingLinkContainer
 
@@ -69,7 +69,7 @@ public class PathfindingMonkey : MonoBehaviour // Поиск пути // Логика которая б
             _gridSystemList.Add(gridSystem);
         }
 
-        // В цикле настроим все ячейки на возможность проходимости, будем стрелять лучом из каждой позиции и для начала Сделаем все узлы непроходимыми и если 1ый луч попал в пол то сделаем проходимым а 2рым луч проверим на препядствие _obstaclesAndDoorLayerMask, если они есть установим эту ячейку опять не проходимой
+        // В цикле настроим все ячейки на возможность проходимости, будем стрелять лучом из каждой позиции и для начала Сделаем все узлы непроходимыми и если 1ый луч попал в пол то сделаем проходимым а 2рым луч проверим на препядствие _obstaclesDoorMousePlaneCoverLayerMask, если они есть установим эту ячейку опять не проходимой
         for (int x = 0; x < _width; x++)
         {
             for (int z = 0; z < _height; z++)
@@ -102,7 +102,7 @@ public class PathfindingMonkey : MonoBehaviour // Поиск пути // Логика которая б
                          worldPosition + Vector3.down * raycastOffsetDistance,
                          Vector3.up,
                          raycastOffsetDistance * 2,
-                         _obstaclesLayerMask)) // Если луч попал в препятствие то установим ячейку НЕ ПРОХОДИМОЙ (Raycast -вернет bool переменную)
+                         _obstaclesCoverLayerMask)) // Если луч попал в препятствие или в укрытие то установим ячейку НЕ ПРОХОДИМОЙ (Raycast -вернет bool переменную)
                     {
                         GetNode(x, z, flooor).SetIsWalkable(false);
                     }

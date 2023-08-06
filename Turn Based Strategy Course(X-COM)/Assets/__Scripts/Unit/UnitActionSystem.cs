@@ -15,8 +15,15 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
 
     public event EventHandler OnSelectedUnitChanged; // Выбранный Юнит Изменен (когда поменяется выбранный юнит мы запустим событие Event)
     public event EventHandler OnSelectedActionChanged; // Выбранное Действие Изменено (когда меняется активное действие в блоке кнопок мы запустим событие Event)
-    public event EventHandler<bool> OnBusyChanged; // Занятость Изменена (когда меняется значение _isBusy, мы запустим событие Event, и передаем ее в аргументе) в <> -generic этот тип будем вторым аргументом
     public event EventHandler OnActionStarted; // Действие Начато ( мы запустим событие Event при старте действия)
+    
+    public event EventHandler<OnUnitSystemEventArgs> OnBusyChanged; // Занятость Изменена (когда меняется значение _isBusy, мы запустим событие Event, и передаем ее в аргументе) в <> -generic этот тип будем вторым аргументом
+
+    public class OnUnitSystemEventArgs : EventArgs // Расширим класс событий, чтобы в аргументе события передать нужных юнитов
+    {
+        public bool isBusy;
+        public BaseAction selectedAction; // выбранное действие
+    }
 
 
     [SerializeField] private Unit _selectedUnit; // Выбранный юнит (ПО УМОЛЧАНИЮ).Ниже сделаем общедоступный метод который будет возвращать ВЫБРАННОГО ЮНИТА
@@ -44,6 +51,19 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
                                         // При старте в _selectedUnit передается юнит по умолчанию
         
         UnitManager.OnAnyUnitDeadAndRemoveList += UnitManager_OnAnyUnitDeadAndRemoveList; //Подпишемся на событие Любой Юнит Умер И Удален из Списка
+        TurnSystem.Instance.OnTurnChanged += TurnSystem_OnTurnChanged; // Подпишемся Ход Изменен
+    }
+
+    private void TurnSystem_OnTurnChanged(object sender, EventArgs e)
+    {
+        if (TurnSystem.Instance.IsPlayerTurn()) // Если ход Игрока то
+        {
+            List<Unit> friendlyUnitList = UnitManager.Instance.GetFriendlyUnitList(); // Вернем список дружественных юнитов
+            if (friendlyUnitList.Count > 0) // Если есть живые то передаем выделению первому по списку юниту
+            {
+                SetSelectedUnit(friendlyUnitList[0]);
+            }
+        };
     }
 
     private void UnitManager_OnAnyUnitDeadAndRemoveList(object sender, EventArgs e)
@@ -107,38 +127,28 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
             SetBusy(); // Установить Занятый
             _selectedAction.TakeAction(mouseGridPosition, ClearBusy); //У выбранного действия вызовим метод "Применить Действие (Действовать)" и передадим в делегат функцию ClearBusy
 
-            OnActionStarted?.Invoke(this, EventArgs.Empty); // "?"- проверяем что !=0. Invoke вызвать (this-ссылка на объект который запускает событие "отправитель" а класс UnitActionSystemUI будет его прослушивать "обрабатывать"
-
-            // Переключатель больше не нужен т.к. мы переименовали Move и Spin в TakeAction, и добавили его в базовый класс. 
-            /*switch (_selectedAction) // Переключатель зависит от переданного ему _selectedAction // Этот подход позволяет в дальнейшем добовлять новые действия 
-            {
-                case MoveAction moveAction:
-                    if (moveAction.IsValidActionGridPosition(_mouseGridPosition)) // Проверяем сеточную позицию мыши на допустимость действий . Если истина то...
-                    {
-                        SetBusy(); // Установить Занятый
-                        moveAction.Move(_mouseGridPosition, ClearBusy); // Отправляем выделенного юнита в _mouseGridPosition (а это центр ячейки сетки) // Также в аргумент Move предаем делегат(ссылку на функцию)
-                    }
-                    break;
-                case SpinAction spinAction:
-                    SetBusy(); // Установить Занятый
-                    spinAction.Spin(ClearBusy); // В аргумент Spin предем делегат(ссылку на функцию). Подпись делегата(сигнатура) должна совподать с функцией которую мы передаем .
-                                                // После выполнения Spin() ПОЗЖЕ в определенном месте класса SpinAction выполниться сохраненный делегат ClearBusy()
-                    break;
-            }*/
+            OnActionStarted?.Invoke(this, EventArgs.Empty); // "?"- проверяем что !=0. Invoke вызвать (this-ссылка на объект который запускает событие "отправитель" а класс UnitActionSystemUI будет его прослушивать "обрабатывать"                     
         }
     }
 
     private void SetBusy() // Установить Занятый
     {
         _isBusy = true;
-
-        OnBusyChanged?.Invoke(this, _isBusy); // "?"- проверяем что !=0. Invoke вызвать (this-ссылка на объект который запускает событие "отправитель" а класс ActionBusyUI будет его прослушивать "обрабатывать"
+        OnBusyChanged?.Invoke(this, new OnUnitSystemEventArgs // создаем новый экземпляр класса OnUnitSystemEventArgs
+        {
+            isBusy =_isBusy,
+            selectedAction = _selectedAction,
+        });
     }
 
     private void ClearBusy() // Очистить занятость или стать свободным
     {
         _isBusy = false;
-        OnBusyChanged?.Invoke(this, _isBusy);
+        OnBusyChanged?.Invoke(this, new OnUnitSystemEventArgs // создаем новый экземпляр класса OnUnitSystemEventArgs
+        {
+            isBusy = _isBusy,
+            selectedAction = _selectedAction,
+        });
     }
 
     private bool TryHandleUnitSelection() // Попытка обработки выбора юнита
@@ -169,7 +179,7 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
         return false; // если нечего не выбрали
     }
 
-    private void SetSelectedUnit(Unit unit) // Присвоить(Установить) выбранного юнита, Установить Выбранное Действие, И запускаем событие   
+    private void SetSelectedUnit(Unit unit) // Присвоить(Установить) выбранного юнита, Установить базовое Действие, И запускаем событие   
     {
         _selectedUnit = unit; // аргумент переданный в этот метод становиться ВЫБРАННЫМ юнитом.
 

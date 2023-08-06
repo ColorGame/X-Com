@@ -6,7 +6,7 @@ using static SwordAction;
 
 public class HealAction : BaseAction // Действие Лечение НАСЛЕДУЕТ класс BaseAction // ВЫделим в отдельный класс // Лежит на каждом юните
 {
-
+    [SerializeField] private Transform _healFXPrefab; // Свечение при лечении
 
     public event EventHandler<Unit> OnHealActionStarted;     // Действие Лечение Началось (будем убирать оружие и достовать бинт) // в событие будем передовать Юнита которого лечим (в HandleAnimationEvents будем создавать свечение)
     public event EventHandler<Unit> OnHealActionCompleted;   // Действие Лечение Закончилочь (отключать бинт и вернуть оружие)
@@ -90,9 +90,6 @@ public class HealAction : BaseAction // Действие Лечение НАСЛЕДУЕТ класс BaseAct
        _targetUnit.Healing(50);
     }
 
-
-
-
     public override string GetActionName() // Присвоить базовое действие //целиком переопределим базовую функцию
     {
         return "Heal";
@@ -128,7 +125,7 @@ public class HealAction : BaseAction // Действие Лечение НАСЛЕДУЕТ класс BaseAct
 
         GridPosition unitGridPosition = _unit.GetGridPosition(); // Получим позицию в сетке юнита
 
-        for (int x = -_maxHealDistance; x <= _maxHealDistance; x++) // Юнит это центр нашей позиции с координатами unitGridPosition, поэтому переберем допустимые значения в условном радиусе _maxHealDistance
+        for (int x = -_maxHealDistance; x <= _maxHealDistance; x++) // Юнит это центр нашей позиции с координатами unitGridPosition, поэтому переберем допустимые значения в условном радиусе _maxComboDistance
         {
             for (int z = -_maxHealDistance; z <= _maxHealDistance; z++)
             {
@@ -186,5 +183,13 @@ public class HealAction : BaseAction // Действие Лечение НАСЛЕДУЕТ класс BaseAct
         return 2;
     }
 
+    public int GetMaxHealDistance()
+    {
+        return _maxHealDistance;
+    }
 
+    public Transform GetHealFXPrefab()
+    {
+        return _healFXPrefab;
+    }
 }

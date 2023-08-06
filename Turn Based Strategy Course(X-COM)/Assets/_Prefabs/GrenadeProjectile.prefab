@@ -271,7 +271,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _typeGrenade: 1
   _moveSpeed: 15
-  _damageAmount: 45
+  _damageAmount: 40
   _damageRadiusInCells: 1
   _damageMultiplierAnimationCurve:
     serializedVersion: 2
@@ -279,27 +279,29 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 0
       value: 1
-      inSlope: 0.0039708503
-      outSlope: 0.0039708503
+      inSlope: -0.0039972663
+      outSlope: -0.0039972663
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 1
+      outWeight: 0.1053487
     - serializedVersion: 3
       time: 1
-      value: 0
-      inSlope: -2.8352907
-      outSlope: -2.8352907
+      value: 0.5
+      inSlope: -1.5970895
+      outSlope: -1.5970895
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.034358203
+      inWeight: 0.06004542
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  _grenadeExplosionVfxPrefab: {fileID: 6125734487752806136, guid: cd82db3c69485304186c77a2c1ed7066,
+  _grenadeExplosionFXPrefab: {fileID: 6125734487752806136, guid: cd82db3c69485304186c77a2c1ed7066,
     type: 3}
-  _grenadeSmokeVfxPrefab: {fileID: 7478375647431571239, guid: 8bf33e12d9a51a7488a498bbbd48666e,
+  _grenadeSmokeFXPrefab: {fileID: 7478375647431571239, guid: 8bf33e12d9a51a7488a498bbbd48666e,
+    type: 3}
+  _electricityWhiteFX: {fileID: 4183575970307780, guid: d2e26db6c77c99c448301c9a114df0c7,
     type: 3}
   _trailRenderer: {fileID: 4439614913397698267}
   _arcYAnimationCurve:

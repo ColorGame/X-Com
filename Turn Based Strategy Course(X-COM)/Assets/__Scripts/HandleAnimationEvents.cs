@@ -7,13 +7,14 @@ public class HandleAnimationEvents : MonoBehaviour // Обработчик Анимационных со
 {
     public event EventHandler OnAnimationTossGrenadeEventStarted;     // Действие В анимации "Бросок гранаты" стартовало событие  (в этот момент будем сосздавать гранату) // Это промежуточное событие между AnimationEvent и GrenadyAction в нем будем создовать гранату
 
-    [SerializeField] private Transform _healVFXPrefab; // Свечение при лечении
     [SerializeField] private Unit _unit;
 
     private Unit _targetUnit;
     private HealAction _healAction;
+    private Transform _healFXPrefab;
 
-    
+
+
     private void Start()
     {
         //Unit unit = GetComponentInParent<Unit>(); // Получим компонент Unit на родителе 
@@ -23,8 +24,7 @@ public class HandleAnimationEvents : MonoBehaviour // Обработчик Анимационных со
             _healAction = healAction;
 
             _healAction.OnHealActionStarted += HealAction_OnHealActionStarted; // Подпишемся на событие
-            //_healAction.OnHealActionCompleted += HealAction_OnHealActionCompleted;
-
+            //_healAction.OnComboActionCompleted += HealAction_OnHealActionCompleted;
         }
     }
 
@@ -40,9 +40,10 @@ public class HandleAnimationEvents : MonoBehaviour // Обработчик Анимационных со
         _targetUnit = unit;
     }
 
-    private void InstantiateHealVFXPrefab() // Вызываю в AnimationEvent на анимации молитвы StendUp
+    private void InstantiateHealFXPrefab() // Вызываю в AnimationEvent на анимации молитвы StendUp
     {
-        Instantiate(_healVFXPrefab, _targetUnit.GetWorldPosition(), Quaternion.LookRotation(Vector3.up)); // Создадим префаб частиц для юнита которого исцеляем (Не забудь в инспекторе включить у частиц Stop Action - Destroy)
+        _healFXPrefab = _healAction.GetHealFXPrefab(); // Получим Префаб свечения из основоного действия
+        Instantiate(_healFXPrefab, _targetUnit.GetWorldPosition(), Quaternion.LookRotation(Vector3.up)); // Создадим префаб частиц для юнита которого исцеляем (Не забудь в инспекторе включить у частиц Stop Action - Destroy)
     }
 
     private void StartIntermediateEvent() // Старт промежуточного события

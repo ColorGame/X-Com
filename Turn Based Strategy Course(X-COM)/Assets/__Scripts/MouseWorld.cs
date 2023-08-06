@@ -64,7 +64,7 @@ public class MouseWorld : MonoBehaviour //  ласс отвечающий за положение курсора
     public static Vector3 GetPosition() // ѕолучить позицию (static обозначает что метод принадлежит классу а не кокому нибудь экземпл€ру) // ѕри одноэтажной игре
     {
         Ray ray = Camera.main.ScreenPointToRay(InputManager.Instance.GetMouseScreenPosition()); // Ћуч от камеры в точку на экране где находитьс€ курсор мыши
-        Physics.Raycast(ray, out RaycastHit raycastHit, float.MaxValue, Instance._mousePlaneLayerMask); // Instance._mousePlaneLayerMask - можно задать как смещение битов слоев 1<<6  т.к. mousePlane под 6 номером
+        Physics.Raycast(ray, out RaycastHit raycastHit, float.MaxValue, Instance._mousePlaneLayerMask); // Instance._coverLayerMask - можно задать как смещение битов слоев 1<<6  т.к. mousePlane под 6 номером
         return raycastHit.point; // ≈сли луч попадет в колайдер то Physics.Raycast будет true, и raycastHit.point вернет "“очку удара в мировом пространстве, где луч попал в коллайдер", а если false то можно вернуть какоенибудь другое нужное значение(в нашем случае вернет нулевой вектор).
     }
 

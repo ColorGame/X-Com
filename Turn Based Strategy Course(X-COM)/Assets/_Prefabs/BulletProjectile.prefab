@@ -186,5 +186,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _trailRenderer: {fileID: 1442843217456019273}
-  _bulletHitVfxPrefab: {fileID: 6125734487752806136, guid: 888bd80ef4e56f344b9dd5ca54b45e5b,
+  _bulletHitFXPrefab: {fileID: 6125734487752806136, guid: 888bd80ef4e56f344b9dd5ca54b45e5b,
     type: 3}

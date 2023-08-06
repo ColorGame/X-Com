@@ -11,7 +11,7 @@ public class PathfindingLinkMonoBehaviourEditor : Editor
 {
 
 
-    private void OnSceneGUI() // Функция срабатывает каждый раз когда меняется сценаю Позволяет редактору обрабатывать событие в режиме просмотра сцены.
+    private void OnSceneGUI() // Функция срабатывает каждый раз когда меняется сцена Позволяет редактору обрабатывать событие в режиме просмотра сцены.
     {
         PathfindingLinkMonoBehaviour pathfindingLinkMonoBehaviour = (PathfindingLinkMonoBehaviour)target; // target as PathfindingLinkMonoBehaviour -другой способ написания //target- Проверяемый объект.
 

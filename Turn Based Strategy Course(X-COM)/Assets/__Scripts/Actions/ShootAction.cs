@@ -27,12 +27,15 @@ public class ShootAction : BaseAction
         Cooloff,    // Остывание (небольшая задержка прежде чем мы закончим действие)
     }
 
-    [SerializeField] private LayerMask _obstaclesAndDoorLayerMask; //маска слоя препятствия и двери (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Obstacles и DoorInteract и MousePlane(пол) // ВАЖНО НА ВСЕХ СТЕНАХ В ИГРЕ УСТАНОВИТЬ МАСКУ СЛОЕВ -Obstacles, а на дверях -DoorInteract //для полов верхних этажей поменять колайдер на Box collider иначе снизу можно будет простреливать верхний этаж
-    [SerializeField] private LayerMask _smokeAndCoverLayerMask; //маска слоя ДЫМА и ПРИКРЫТИЯ (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Smoke и Cover // ВАЖНО НА ВСЕХ ПРИКРЫТИЯ и ДЫМЕ от гранаты,  УСТАНОВИТЬ СООТВЕТСТВУЮЩУЮ МАСКУ СЛОЕВt 
+    [SerializeField] private LayerMask _obstaclesDoorMousePlaneCoverLayerMask; //маска слоя препятствия НАДО ВЫБРАТЬ Obstacles и DoorInteract и MousePlane(пол) Cover// ВАЖНО НА ВСЕХ СТЕНАХ В ИГРЕ УСТАНОВИТЬ МАСКУ СЛОЕВ -Obstacles, а на дверях -DoorInteract //для полов верхних этажей поменять колайдер на Box collider иначе снизу можно будет простреливать верхний этаж // Cover нельзя простреливать если точка выстрела ниже укрытия (надо проверять все объекты Cover)
+    [SerializeField] private LayerMask _smokeCoverLayerMask; //маска слоя ДЫМА и ПРИКРЫТИЯ (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Smoke и Cover // ВАЖНО НА ВСЕХ ПРИКРЫТИЯ и ДЫМЕ от гранаты,  УСТАНОВИТЬ СООТВЕТСТВУЮЩУЮ МАСКУ СЛОЕВt 
+    [SerializeField] private LayerMask _coverLayerMask; // маска слоя Укрытие
+    [SerializeField] private LayerMask _smokeLayerMask; // маска слоя Дым   
     [SerializeField] private int _numberShoot = 3; // Количество выстрелов
     [SerializeField] private float _delayShoot = 0.2f; //задержка между выстрелами
     [SerializeField] private Transform _bulletProjectilePrefab; // в инспекторе закинуть префаб пули
     [SerializeField] private Transform _shootPointTransform; // в инспекторе закинуть точку выстрела лежит на автомате
+    [SerializeField] private Transform _aimPointTransform; // в инспекторе закинуть точку прицеливания лежит на голове (нужна если враг присел или это маленький персонаж)
 
     private State _state; // Состояние юнита
     private int _maxShootDistance = 7;
@@ -43,10 +46,12 @@ public class ShootAction : BaseAction
     private int _counterShoot; // Счетчик выстрелов
     private bool _hit; // Попал или промазал
     private float _hitPercent; // Процент попадания
+    private float _cellSize;// Размер ячейки
 
     private void Start()
     {
         _hitPercent = 1f; //Установим Процент попадания МАКСИМАЛЬНЫМ 100%
+        _cellSize = LevelGrid.Instance.GetCellSize();
     }
     private void Update()
     {
@@ -124,10 +129,8 @@ public class ShootAction : BaseAction
         _targetUnit = LevelGrid.Instance.GetUnitAtGridPosition(gridPosition); // Получим юнита в которого целимся и сохраним его
 
         _state = State.Aiming; // Активируем состояние Прицеливания 
-        float aimingStateTime = 1f; // Для избежания магических чисель введем переменную  Продолжительность Состояния Прицеливания //НУЖНО НАСТРОИТЬ//
+        float aimingStateTime = 0.5f; // Для избежания магических чисель введем переменную  Продолжительность Состояния Прицеливания //НУЖНО НАСТРОИТЬ//
         _stateTimer = aimingStateTime;
-
-        // _timerShoot = 0; // НЕОБЯЗАТЕЛЬНО
 
         _canShootBullet = true;
 
@@ -155,21 +158,18 @@ public class ShootAction : BaseAction
 
         Transform bulletProjectilePrefabTransform = Instantiate(_bulletProjectilePrefab, _shootPointTransform.position, Quaternion.identity); // Создадим префаб пули в точке выстрела
         BulletProjectile bulletProjectile = bulletProjectilePrefabTransform.GetComponent<BulletProjectile>(); // Вернем компонент BulletProjectile созданной пули
-        Vector3 targetUnitWorldPosition = _targetUnit.GetWorldPosition(); // Мировая позиция целевого юнита. 
-        float unitShoulderHeight = 1.7f; // Высота плеча юнита,
-        targetUnitWorldPosition.y += unitShoulderHeight; // В результате ПУЛЯ будет выпущенна в голову врага
+        Vector3 targetUnitAimPointPosition = _targetUnit.GetAction<ShootAction>().GetAimPoinTransform().position; // позицию Прицеливания целевого юнита. 
 
         if (_hit) // Если попали то
         {
-            bulletProjectile.Setup(targetUnitWorldPosition); // В аргумент предали Мировую позицию целевого юнита. с преобразовоной координатой по У
-            _targetUnit.Damage(10); // ДЛЯ ТЕСТА УЩЕРБ БУДЕТ 10. В дальнейшем будем брать этот показатель из оружия //НАДО НАСТРОИТЬ//
+            bulletProjectile.Setup(targetUnitAimPointPosition, _hit); // В аргумент предали позицию Прицеливания целевого юнита
+            _targetUnit.Damage(5); // ДЛЯ ТЕСТА УЩЕРБ БУДЕТ 10. В дальнейшем будем брать этот показатель из оружия //НАДО НАСТРОИТЬ//
         }
         else // Если промах
-        {          
-            //Рандомно сместим по X Z
-            targetUnitWorldPosition.x += UnityEngine.Random.Range(0.5f, 0.8f);
-            targetUnitWorldPosition.z += UnityEngine.Random.Range(0.5f, 0.8f);
-            bulletProjectile.Setup(targetUnitWorldPosition); // В аргумент предали Мировую позицию целевого юнита. с преобразовоной координатой по У
+        {
+            //Рандомно сместим по X Y Z
+            targetUnitAimPointPosition += Vector3.one * UnityEngine.Random.Range(-0.8f, 0.8f);
+            bulletProjectile.Setup(targetUnitAimPointPosition, _hit); // В аргумент предали Мировую позицию целевого юнита. с преобразовоной координатой по У
         }
     }
 
@@ -177,33 +177,75 @@ public class ShootAction : BaseAction
     {
         _hitPercent = 1f; //Установим Процент попадания МАКСИМАЛЬНЫМ 100%
 
-        // ПРОВЕРИМ НА ПРОСТРЕЛИВАЕМОСТЬ до цели
+        // ПРОВЕРИМ ВСЕ CoverSmokeObject НА ПУТИ ВЫСТРЕЛА
+
         Vector3 unitWorldPosition = _unit.GetWorldPosition(); // Получим мировые координаты Юнита
         Vector3 enemyUnitWorldPosition = enemyUnit.GetWorldPosition(); //Получим мировые координаты ЮнитаВРАГА
         Vector3 shototDirection = (enemyUnitWorldPosition - unitWorldPosition).normalized; //Нормализованный Вектор Направления стрельбы
-        RaycastHit hitInfo; // Структура, используемая для получения информации обратно из raycast.
+        float heightRaycast = 0.5f; // Высота выстрела луча (сделал низким что бы попасть в Half половинчатый коллайдер)              
+        float maxPenaltyAccuracy = 0; // максимальный штраф прицеливания
+        Collider ignoreCoverSmokeCollider = null; // Игнорировать CoverSmokeObject
 
-        float unitShoulderHeight = 1.7f; // Высота плеча юнита, в дальнейшем будем реализовывать приседание и половинчатые укрытия
+        // Выстрелим ЛУЧ в сорону врага на растояние 1.5 КЛЕТКИ и выясню Это УКРЫТИЕ близко. Если БЛИЗКО то игнорируем штраф от этого укрытия(ДЫМ будем игнорировать т.к. он не защищает от пуль а только мешает прицелиться). Если БЛИЗКО то игнорируем штраф от этого укрытия
         if (Physics.Raycast(
-                unitWorldPosition + Vector3.up * unitShoulderHeight,
-                shototDirection,
-                out hitInfo,
-                Vector3.Distance(unitWorldPosition, enemyUnitWorldPosition),
-                _smokeAndCoverLayerMask)) // Если луч попал в Smoke или CoverObject (Raycast -вернет bool переменную, и код в скобках выполниться)
+                 unitWorldPosition + Vector3.up * heightRaycast,
+                 shototDirection,
+                 out RaycastHit hitCoverInfo,
+                 _cellSize *1.5f,
+                 _coverLayerMask))
         {
-            CoverObject coverObject = hitInfo.collider.GetComponent<CoverObject>(); // Получим на колайдере, в который попали, компонент CoverObject - Объект укрытия
-            switch (coverObject.GetCoverType())
+            ignoreCoverSmokeCollider = hitCoverInfo.collider;            
+        }
+        /*Debug.DrawRay(unitWorldPosition + Vector3.up * heightRaycast,
+                 shototDirection * (_cellSize *1.5f),
+                 Color.white,
+                 100);*/
+
+        // Пороверим все CoverSmokeObject и получим maxPenaltyAccuracy
+        RaycastHit[] raycastHitArray = Physics.RaycastAll(
+                unitWorldPosition + Vector3.up * heightRaycast,
+                shototDirection,
+                Vector3.Distance(unitWorldPosition, enemyUnitWorldPosition),
+                _smokeCoverLayerMask); // Сохраним массив всех попаданий луча. Obstacles слой Игнорирую т.к. через него НЕЛЬЗЯ СТРЕЛЯТЬ
+
+        /*Debug.DrawRay(unitWorldPosition + Vector3.up * heightRaycast,
+                shototDirection * Vector3.Distance(unitWorldPosition, enemyUnitWorldPosition),
+                 Color.green,
+                 999);*/
+
+        foreach (RaycastHit raycastHit in raycastHitArray) // Переберем наш полученный массив И получим максимальный штраф прицеливания maxPenaltyAccuracy
+        {
+            Collider coverSmokeCollider = raycastHit.collider; // Получим колайдер, в который попали.
+
+            if (coverSmokeCollider == ignoreCoverSmokeCollider)
             {
-                case CoverType.Full: // Если укрытие Полное то уменьшим точность на 50%
-                    _hitPercent -= .5f;
-                    break;
-                case CoverType.Half: // Если укрытие Не полное то уменьшим точность на 25%
-                    _hitPercent -= .25f;
-                    break;
+                //Пропустим коллайдер который надо игнорировать
+                continue;
+            }
+            CoverSmokeObject coverSmokeObject = coverSmokeCollider.GetComponent<CoverSmokeObject>(); // Получим на колайдере, в который попали, компонент CoverSmokeObject - Объект укрытия или Дым
+            float penaltyAccuracy = coverSmokeObject.GetPenaltyAccuracy(); // Вернуть Штраф прицеливания
+            if (penaltyAccuracy > maxPenaltyAccuracy)
+            {
+                maxPenaltyAccuracy = penaltyAccuracy;
             }
         }
 
-        return _hitPercent;
+        // Выстрелим ЛУЧ со стороны врага что бы проверить юнит в ДЫМУ (ЛУч не может стрелять внутри колайдера(внутри стены))
+        if (Physics.Raycast(
+                 enemyUnitWorldPosition + Vector3.up * heightRaycast,
+                 shototDirection * (-1),
+                 out RaycastHit hitSmokeInfo,
+                 Vector3.Distance(unitWorldPosition, enemyUnitWorldPosition),
+                 _smokeLayerMask)) // проверяем только дым
+        {
+            CoverSmokeObject coverSmokeObject = hitSmokeInfo.collider.GetComponent<CoverSmokeObject>(); // Получим на колайдере, в который попали, компонент CoverSmokeObject - Объект укрытия
+            float penaltyAccuracy = coverSmokeObject.GetPenaltyAccuracy(); // Вернуть Штраф прицеливания
+            if (penaltyAccuracy > maxPenaltyAccuracy)
+            {
+                maxPenaltyAccuracy = penaltyAccuracy;
+            }
+        }
+        return _hitPercent -= maxPenaltyAccuracy;
     }
 
     public override string GetActionName() // Получим имя для кнопки
@@ -259,20 +301,26 @@ public class ShootAction : BaseAction
                         continue;
                     }
 
-                    // ПРОВЕРИМ НА ПРОСТРЕЛИВАЕМОСТЬ до цели
+                    // ПРОВЕРИМ НА ПРОСТРЕЛИВАЕМОСТЬ до цели , Cover нельзя простреливать если точка выстрела ниже укрытия (надо проверять все объекты Cover)
                     Vector3 unitWorldPosition = LevelGrid.Instance.GetWorldPosition(unitGridPosition); // Переведем в мировые координаты переданную нам сеточную позицию Юнита  
                     Vector3 shototDirection = (targetUnit.GetWorldPosition() - unitWorldPosition).normalized; //Нормализованный Вектор Направления стрельбы
+                    Vector3 shootPoint = _shootPointTransform.position - unitWorldPosition; // Получим расстояние от точки выстрела до основания юнита (актуально для 2 этажа)
 
-                    float unitShoulderHeight = 1.7f; // Высота плеча юнита, в дальнейшем будем реализовывать приседание и половинчатые укрытия
+                    float reserveHeight = 0.15f; // Резерв по высоте чуть выше точки выстрела ()
                     if (Physics.Raycast(
-                            unitWorldPosition + Vector3.up * unitShoulderHeight,
+                            unitWorldPosition + Vector3.up * (shootPoint.y + reserveHeight),
                             shototDirection,
                             Vector3.Distance(unitWorldPosition, targetUnit.GetWorldPosition()),
-                            _obstaclesAndDoorLayerMask)) // Если луч попал в препятствие то (Raycast -вернет bool переменную)
+                            _obstaclesDoorMousePlaneCoverLayerMask)) // Если луч попал в препятствие то (Raycast -вернет bool переменную)
                     {
                         // Мы заблоктрованны препятствием
                         continue;
                     }
+
+                    /*Debug.DrawRay(unitWorldPosition + Vector3.up * (shootPoint.y + reserveHeight),
+                        shototDirection * Vector3.Distance(unitWorldPosition, startUnit.GetWorldPosition()),
+                        Color.red,
+                        999);*/
 
                     validGridPositionList.Add(testGridPosition); // Добавляем в список те позиции которые прошли все тесты
                                                                  //Debug.Log(testGridPosition);
@@ -285,7 +333,7 @@ public class ShootAction : BaseAction
 
 
 
-    public Unit GetTargetUnit() // Раскроем _targetUnit
+    public Unit GetTargetUnit() // Раскроем _unitPartner
     {
         return _targetUnit;
     }
@@ -302,7 +350,7 @@ public class ShootAction : BaseAction
         return new EnemyAIAction
         {
             gridPosition = gridPosition,
-            //actionValue = 100 +Mathf.RoundToInt(1- targetUnit.GetHealthNormalized()) *100,  // Реализуем логику для стрельбы по самому поврежденному игроку .
+            //actionValue = 100 +Mathf.RoundToInt(1- startUnit.GetHealthNormalized()) *100,  // Реализуем логику для стрельбы по самому поврежденному игроку .
             // Например если юнит полностью здоров то GetHealthNormalized() вернет 1  тогда (1-1)*100 = 0 в итоге actionValue останеться прежним 100
             // но если осталось половину жизни то GetHealthNormalized() вернет 0,5 тогда (1-0,5)*100 = 50 и actionValue станет равным 150 более высокая значимость действия 
             // ЛОГИКА НЕ РАБОТАЕТ КОГДА У ЮНИТОВ РАЗНОЕ МАКСИМАЛЬНОЕ ЗДОРОВЬЕ
@@ -324,5 +372,15 @@ public class ShootAction : BaseAction
     public int GetTargetCountAtPosition(GridPosition gridPosition) // Получить Количество Целей На Позиции
     {
         return GetValidActionGridPositionList(gridPosition).Count; // Получим количество целей из списка Допустимых целей
+    }
+
+    public Transform GetAimPoinTransform() // Получить точку прицеливания
+    {
+        return _aimPointTransform;
+    }
+
+    public Transform GetShootPoinTransform() // Получить точку выстрела
+    {
+        return _shootPointTransform;
     }
 }

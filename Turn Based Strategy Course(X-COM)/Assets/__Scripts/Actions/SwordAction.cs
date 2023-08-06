@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static ShootAction;
 
 public class SwordAction : BaseAction // Базовое действие Меч
 {
@@ -118,7 +117,7 @@ public class SwordAction : BaseAction // Базовое действие Меч
 
         GridPosition unitGridPosition = _unit.GetGridPosition(); // Получим позицию в сетке юнита
 
-        for (int x = -_maxSwordDistance; x <= _maxSwordDistance; x++) // Юнит это центр нашей позиции с координатами unitGridPosition, поэтому переберем допустимые значения в условном радиусе _maxHealDistance
+        for (int x = -_maxSwordDistance; x <= _maxSwordDistance; x++) // Юнит это центр нашей позиции с координатами unitGridPosition, поэтому переберем допустимые значения в условном радиусе _maxComboDistance
         {
             for (int z = -_maxSwordDistance; z <= _maxSwordDistance; z++)
             {
@@ -174,7 +173,7 @@ public class SwordAction : BaseAction // Базовое действие Меч
         return _maxSwordDistance;
     }
 
-    public Unit GetTargetUnit() // Раскроем _targetUnit
+    public Unit GetTargetUnit() // Раскроем _unitPartner
     {
         return _targetUnit;
     }

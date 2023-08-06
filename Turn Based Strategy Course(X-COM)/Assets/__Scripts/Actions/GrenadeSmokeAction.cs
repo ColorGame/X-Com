@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static GrenadeProjectile;
 
 public class GrenadeSmokeAction : GrenadeAction
 {
@@ -12,14 +13,21 @@ public class GrenadeSmokeAction : GrenadeAction
         {
             Transform grenadeProjectileTransform = Instantiate(_grenadeProjectilePrefab, _grenadeSpawnTransform.position, Quaternion.identity); // Создадим префаб гранаты 
             GrenadeProjectile grenadeProjectile = grenadeProjectileTransform.GetComponent<GrenadeProjectile>(); // Возьмем у гранаты компонент GrenadeProjectile
-
-            grenadeProjectile.SetTypeGrenade(GrenadeProjectile.TypeGrenade.Smoke); // Установим Тип ГРАНАТЫ
-            grenadeProjectile.Setup(_targetGridPositin, OnGrenadeBehaviorComplete); // И вызовим функцию Setup() передав в нее целевую позицию (сеточныая позиция курсора мыши) и передадим в делегат функцию OnGrenadeBehaviorComplete ( при взрыве гранаты будем вызывать эту функцию)
+                       
+            grenadeProjectile.Setup(_targetGridPositin, TypeGrenade.Smoke, OnGrenadeBehaviorComplete); // И вызовим функцию Setup() передав в нее целевую позицию (сеточныая позиция курсора мыши) Тип ГРАНАТЫ  и передадим в делегат функцию OnGrenadeBehaviorComplete ( при взрыве гранаты будем вызывать эту функцию)
         }
     }
 
+    public override EnemyAIAction GetEnemyAIAction(GridPosition gridPosition) //Получить действие вражеского ИИ // Переопределим абстрактный базовый метод
+    {
+        return new EnemyAIAction
+        {
+            gridPosition = gridPosition,
+            actionValue = 50, //Поставим значение действия. Будет бросать гранату если ничего другого сделать не может, 
+        };
+    }
     public override string GetActionName() // Присвоить базовое действие //целиком переопределим базовую функцию
     {
-        return "GrenadeSmoke";
+        return "Smoke";
     }    
 }

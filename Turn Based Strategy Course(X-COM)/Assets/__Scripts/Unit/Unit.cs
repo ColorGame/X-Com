@@ -21,13 +21,20 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
 
     // Частные случаи
     private GridPosition _gridPosition;
-    private HealthSystem _healthSystem; 
-    private BaseAction[] _baseActionsArray; // Массив базовых действий // Будем использовать при создании кнопок
+    private HealthSystem _healthSystem;
+    private BaseAction[] _baseActionsArray; // Массив базовых действий // Будем использовать при создании кнопок   
+    private UnitRope _unitRope;
     private int _actionPoints = ACTION_POINTS_MAX; // Очки действия
+    private float _penaltyStunPercentNextTurn;  // Штрафной процент оглушения на следующем ходе
 
     private void Awake()
     {
-        _healthSystem = GetComponent<HealthSystem>(); 
+        _healthSystem = GetComponent<HealthSystem>();
+
+        if (TryGetComponent<UnitRope>(out UnitRope unitRope))
+            {
+            _unitRope = unitRope;
+        }
         _baseActionsArray = GetComponents<BaseAction>(); // _moveAction и _spinAction также будут храниться внутри этого массива
     }
 
@@ -43,7 +50,7 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
 
         OnAnyUnitSpawned?.Invoke(this, EventArgs.Empty); // Запустим событие Любой Рожденный(созданный) Юнит. Событие статичное поэтому будет выполняться для всех созданных Юнитов
     }
-       
+
 
     private void Update()
     {
@@ -53,7 +60,7 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
             // Изменем положение юнита на сетке
             GridPosition oldGridPosition = _gridPosition; // Сохраним старую позицию что бы передать в event
             _gridPosition = newGridPosition; //Обновим позицию - Новая позиция становиться текущей
-           
+
             LevelGrid.Instance.UnitMovedGridPosition(this, oldGridPosition, newGridPosition); //в UnitMovedGridPosition запускаем Событие. Поэтому эту строку поместим в КОНЦЕЦ . Иначе мы запускаем событие сетка обнавляется а юнит еще не перемещен
         }
     }
@@ -69,7 +76,7 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
         }
         return null; // Если нет совпадений то вернем ноль
     }
-        
+
     public GridPosition GetGridPosition() // Получить сеточную позицию
     {
         return _gridPosition;
@@ -99,7 +106,6 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
         }
     }
 
-
     public bool CanSpendActionPointsToTakeAction(BaseAction baseAction) //мы МОЖЕМ Потратить Очки Действия, Чтобы Выполнить Действие ? 
     {
         if (_actionPoints >= baseAction.GetActionPointCost()) // Если очков действия хватает то...
@@ -115,7 +121,7 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
         return _actionPoints >= baseAction.GetActionPointCost();*/
     }
 
-    private void SpendActionPoints(int amount) //Потратить очки действий (amount- количество которое надо потратить)
+    public void SpendActionPoints(int amount) //Потратить очки действий (amount- количество которое надо потратить)
     {
         _actionPoints -= amount;
 
@@ -135,6 +141,12 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
         {
             _actionPoints = ACTION_POINTS_MAX;
 
+            if (_penaltyStunPercentNextTurn != 0) // Если есть штраф то применим
+            {
+                _actionPoints -= Mathf.RoundToInt(_actionPoints * _penaltyStunPercentNextTurn); // Если _penaltyStunPercentNextTurn со знаком"-" то очки увеличаться
+                _penaltyStunPercentNextTurn = 0; // И обнулим штраф
+            }
+
             OnAnyActionPointsChanged?.Invoke(this, EventArgs.Empty); // запускаем событие ПОСЛЕ обнавления очков действий.(для // РЕШЕНИЕ // 2 //в UnitActionSystemUI)
         }
     }
@@ -148,12 +160,22 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
     {
         _healthSystem.Healing(healingAmount);
     }
-    
-    public void Damage(int damageAmount) // Урон (в аргумент передаем величину восстановившегося здоровья)
+
+    public void Damage(int damageAmount) // Урон (в аргумент передаем величину повреждения)
     {
         _healthSystem.Damage(damageAmount);
     }
 
+    public void Stun(float stunPercent) // Оглушить на stunPercent(процент оглушения)
+    {
+        if (_actionPoints <= 0) // Если очков хода нет то применить штрав к след. ходу
+        {
+            _penaltyStunPercentNextTurn = stunPercent * 0.5f; // Половина от начального Процента Оглушения
+        }
+        _actionPoints -= Mathf.RoundToInt(_actionPoints * stunPercent);
+
+        OnAnyActionPointsChanged?.Invoke(this, EventArgs.Empty); // запускаем событие ПОСЛЕ обнавления очков действий.
+    }
 
 
     private void HealthSystem_OnDead(object sender, EventArgs e) // Будет выполняться при смерти юнита
@@ -177,7 +199,7 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
     {
         return _healthSystem.GetHealth();
     }
-    
+
     public int GetHealthMax() // Раскроем для чтения
     {
         return _healthSystem.GetHealthMax();
@@ -187,4 +209,13 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
     {
         return _healthSystem.IsDead();
     }
+
+    public UnitRope GetUnitRope()
+    {
+        return _unitRope;
+    }
+
+    
+
+
 }

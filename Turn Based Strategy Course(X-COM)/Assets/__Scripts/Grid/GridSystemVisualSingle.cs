@@ -11,7 +11,9 @@ public class GridSystemVisualSingle : MonoBehaviour //Сеточная система визуализа
 
     [SerializeField] private MeshRenderer _meshRendererHex; // Будем включать и выкл. MeshRenderer что бы скрыть или показать наш визуальный объект
 
-    [SerializeField] private MeshRenderer _meshRendererСircle; // Будем включать и выкл. MeshRenderer что бы скрыть или показать наш визуальный объект
+    [SerializeField] private MeshRenderer _meshRendererСircleGrenade; // Будем включать и выкл. MeshRenderer что бы скрыть или показать наш визуальный объект
+    
+    [SerializeField] private MeshRenderer _meshRendererQuadGrenade; // Будем включать и выкл. MeshRenderer что бы скрыть или показать наш визуальный объект
 
     // Для отладки шестигранной сетки (отображение ячейки под мышкой)
     //[SerializeField] private GameObject _SelectedGameObject; // Для отладки Шестигранной сетки
@@ -51,18 +53,31 @@ public class GridSystemVisualSingle : MonoBehaviour //Сеточная система визуализа
     private void Start()
     {
         _meshRendererHex.enabled = false; //Скрыть Шестигранную Ячейку
-        _meshRendererСircle.enabled = false; //Скрыть Круг
+        _meshRendererСircleGrenade.enabled = false; //Скрыть Круг
+        _meshRendererQuadGrenade.enabled=false; // Скрыть квадрат
     }
 
     public void ShowСircle(float radius) // Показать Круг нужного диаметра
     {
-        _meshRendererСircle.enabled = true;
-        _meshRendererСircle.transform.localScale = Vector3.one* 2*radius;
+        _meshRendererСircleGrenade.enabled = true;
+        _meshRendererСircleGrenade.transform.localScale = Vector3.one* 2*radius;
     }
 
     public void HideСircle() // Скрыть
     {
-        _meshRendererСircle.enabled = false;
+        _meshRendererСircleGrenade.enabled = false;
+    }
+
+    public void ShowQuad(Material material, float radius = 1) // Показать Квадрат нужного диаметра
+    {
+        _meshRendererQuadGrenade.enabled = true;
+        _meshRendererQuadGrenade.transform.localScale = Vector3.one * 2 * radius;
+        _meshRendererQuadGrenade.material = material; // Установим переданный нам материал
+    }
+
+    public void HideQuad() // Скрыть
+    {
+        _meshRendererQuadGrenade.enabled = false;
     }
 
     public void Show(Material material) // Показать
@@ -74,7 +89,8 @@ public class GridSystemVisualSingle : MonoBehaviour //Сеточная система визуализа
     public void Hide() // Скрыть
     {
         _meshRendererQuad.enabled = false;
-        _meshRendererСircle.enabled = false;
+        _meshRendererСircleGrenade.enabled = false;
+        _meshRendererQuadGrenade.enabled = false;
     }
 #endif
 

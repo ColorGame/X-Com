@@ -3,19 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UnitAnimator : MonoBehaviour // Анимация юнита и создание пули (ПЛАНЫ: в дальнейшем можно создать класс оружие Arms и расширять его, тогда в этих классах и будем создавать пули)
+public class UnitAnimator : MonoBehaviour // Анимация юнита(ПЛАНЫ: в дальнейшем можно создать класс оружие Arms и расширять его, тогда в этих классах и будем создавать пули)
 {
     [SerializeField] private Animator _animator;
-
-    
+        
 
     // Если сложная система оружий то лучше создать отдельный скрипт который отвечает за смену оружия
     // Менеджер по оружию описание логики https://community.gamedev.tv/t/weapon-manager/213840
     [SerializeField] private Transform _rifleTransformHand_R; //в инспекторе закинуть Трансформ Винтовки на ПРАВОЙ РУКЕ
     [SerializeField] private Transform _rifleTransformHand_L; //в инспекторе закинуть Трансформ Винтовки на ЛЕВОЙ РУКЕ
     [SerializeField] private Transform _swordTransform; //в инспекторе закинуть Трансформ Мечя
-
-    [SerializeField] private Transform _healVFXPrefab; // Свечение при лечении
 
     // В дальнейшем сохраним активное оружие и будем его активировать после лечения
     /*private bool _swordActive;
@@ -56,7 +53,13 @@ public class UnitAnimator : MonoBehaviour // Анимация юнита и создание пули (ПЛА
         {
             grenadeSmokeAction.OnGrenadeActionStarted += GrenadeAction_OnGrenadeActionStarted;// Подпишемся на событие
             grenadeSmokeAction.OnGrenadeActionCompleted += GrenadeAction_OnGrenadeActionCompleted;         
-        }      
+        }
+
+        if (TryGetComponent<GrenadeStunAction>(out GrenadeStunAction grenadeStunAction))// Попробуем получить компонент GrenadeAction и если получиться сохраним в grenadeAction
+        {
+            grenadeStunAction.OnGrenadeActionStarted += GrenadeAction_OnGrenadeActionStarted;// Подпишемся на событие
+            grenadeStunAction.OnGrenadeActionCompleted += GrenadeAction_OnGrenadeActionCompleted;
+        }
     }
         
     private void MoveAction_OnChangedFloorsStarted(object sender, MoveAction.OnChangeFloorsStartedEventArgs e)
@@ -96,7 +99,7 @@ public class UnitAnimator : MonoBehaviour // Анимация юнита и создание пули (ПЛА
         EquipRifleHand_R(); // Включим винтовку
 
         //Буду создавть в Анимации через AnimationEvent (HandleAnimationEvents)
-        //Instantiate(_healVFXPrefab, unit.GetWorldPosition(), Quaternion.LookRotation(Vector3.up)); // Создадим префаб частиц для юнита которого исцеляем (Не забудь в инспекторе включить у частиц Stop Action - Destroy)
+        //Instantiate(_healFXPrefab, unit.GetWorldPosition(), Quaternion.LookRotation(Vector3.up)); // Создадим префаб частиц для юнита которого исцеляем (Не забудь в инспекторе включить у частиц Stop Action - Destroy)
     }
 
     private void HealAction_OnHealActionStarted(object sender, Unit unit) 
