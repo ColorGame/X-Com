@@ -9,11 +9,12 @@ public class UnitWorldUI : MonoBehaviour // Мировой пользовательский интерфейс ю
 {
     [SerializeField] private TextMeshProUGUI _actionPointsText; // Закинуть текс UI
     [SerializeField] private TextMeshProUGUI _hitPercentText; // Закинуть текст здоровья
-    [SerializeField] private Image _aimImage; // закинуть иконку прицела
-    [SerializeField] private Unit _unit; // в инспекторе закинуть юнита
-    [SerializeField] private Image _healthBarImage; // в инспекторе закинуть шкалу здоровья "Bar"
-    [SerializeField] private HealthSystem _healthSystem; // Закинуть самого юнита тк скрипт висит на нем
     [SerializeField] private TextMeshProUGUI _healthPointsText; // Закинуть текст здоровья
+    [SerializeField] private Image _aimImage; // закинуть иконку прицела
+    [SerializeField] private Image _stunImage; // закинуть иконку ОГЛУШЕНИЯ
+    [SerializeField] private Image _healthBarImage; // в инспекторе закинуть шкалу здоровья "Bar"
+    [SerializeField] private Unit _unit; // в инспекторе закинуть юнита
+    [SerializeField] private HealthSystem _healthSystem; // Закинуть самого юнита тк скрипт висит на нем
 
 
     private void Start()

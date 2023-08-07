@@ -392,6 +392,7 @@ MonoBehaviour:
   _actionPointsText: {fileID: 8490856765949782143}
   _hitPercentText: {fileID: 8742442711506036170}
   _aimImage: {fileID: 4897724447002639272}
+  _stunImage: {fileID: 7436088241424677958}
   _unit: {fileID: 3013477999232598452}
   _healthBarImage: {fileID: 4917000171070677983}
   _healthSystem: {fileID: 3460450167430738910}
@@ -776,8 +777,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.592, y: 0.358}
-  m_SizeDelta: {x: 0.4, y: 0.4}
+  m_AnchoredPosition: {x: -0.568, y: 0.35}
+  m_SizeDelta: {x: 0.3, y: 0.3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2462654650377827238
 CanvasRenderer:
