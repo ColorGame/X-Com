@@ -45,7 +45,7 @@ public class SpinAction : BaseAction // Вращение
 
     public override string GetActionName() // Присвоить базовое действие //целиком переопределим базовую функцию
     {
-        return "Spin";
+        return "разворот";
     }
 
     public override List<GridPosition> GetValidActionGridPositionList() // Получить Список Допустимых Сеточных Позиция для Действий // переопределим базовую функцию

@@ -19,6 +19,8 @@ public class ActionButtonUI : MonoBehaviour // Обрабатываем логику нажатия на кн
     [SerializeField] private Sprite _spriteSword;
     [SerializeField] private Sprite _spriteInteract;
     [SerializeField] private Sprite _spriteHeal;
+    [SerializeField] private Sprite _spriteBinoculars;
+    [SerializeField] private Sprite _spriteHook;
 
 
     private BaseAction _baseAction;
@@ -49,29 +51,29 @@ public class ActionButtonUI : MonoBehaviour // Обрабатываем логику нажатия на кн
             case ShootAction shootAction:
                 _button.image.sprite = _spriteShoot;
                 break;
-
             case GrenadeAction grenadeAction:
                 _button.image.sprite = _spriteGrenade;
                 break;
-
             case MoveAction moveAction:
                 _button.image.sprite = _spriteMove;
                 break;
-
             case SpinAction spinAction:
                 _button.image.sprite = _spriteSpin;
                 break;
-
-            case HealAction healAction: 
+            case HealAction healAction:
                 _button.image.sprite = _spriteHeal;
                 break;
-
             case SwordAction swordAction:
                 _button.image.sprite = _spriteSword;
                 break;
-
             case InteractAction interactAction:
                 _button.image.sprite = _spriteInteract;
+                break;
+            case SpotterFireAction spotterFireAction:
+                _button.image.sprite = _spriteBinoculars;
+                break;
+            case ComboAction comboAction:
+                _button.image.sprite = _spriteHook;
                 break;
 
         }

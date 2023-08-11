@@ -38,7 +38,7 @@ public class TurnSystemUI : MonoBehaviour // Система Ходов UI обрабатывает нажат
 
     private void UpdateNamberTurnText() // Обнавление очков действий
     {
-        _turnNumberText.text = ("Turn " + TurnSystem.Instance.GetTurnNumber()).ToUpper();
+        _turnNumberText.text = ("" + TurnSystem.Instance.GetTurnNumber()).ToUpper();
     }
 
     private void UpdateEnemyTurnVisual() //Обновление Визуальной таблички ход врага
@@ -49,5 +49,6 @@ public class TurnSystemUI : MonoBehaviour // Система Ходов UI обрабатывает нажат
     private void UpdateEndTurnButtonVisibility() // Обновить видимость кнопки End Turn
     {
         _endTurnButton.gameObject.SetActive(TurnSystem.Instance.IsPlayerTurn()); // Показываем только во время хода игрока
+
     }
 }

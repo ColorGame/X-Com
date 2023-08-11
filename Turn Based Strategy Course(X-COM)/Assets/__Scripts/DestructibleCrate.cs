@@ -24,6 +24,8 @@ public class DestructibleCrate : MonoBehaviour // Разрушаемый ящик
 
         ApplyExplosionToChildren(crateDestroyedTransform, 150f, transform.position, 10f); // Применим взрыв к разрушенному ящику, с силой 150, в той же позиции, и радиус действия 10
 
+        SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.DestructionCrate);
+
         Destroy(gameObject); //Уничтожим коробку
 
         OnAnyDestroyed?.Invoke(this, EventArgs.Empty);

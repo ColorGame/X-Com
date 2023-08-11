@@ -31,6 +31,7 @@ public class HealthSystem : MonoBehaviour // Система Здоровья // Висит на юните/
         if(_health == 0)
         {
             Die();
+            SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.DeathCry);
         }
 
         //Debug.Log(_health);

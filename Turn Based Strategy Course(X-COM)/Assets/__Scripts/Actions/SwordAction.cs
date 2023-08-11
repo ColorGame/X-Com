@@ -28,7 +28,7 @@ public class SwordAction : BaseAction // Базовое действие Меч
     private float _stateTimer; //Таймер состояния
     private Unit _targetUnit;// Юнит в которого стреляем целимся
 
-
+    private int _swordDamage=50; // Урон от меча
     private int _maxSwordDistance = 1; //Максимальная дальность поражения Мечом //НУЖНО НАСТРОИТЬ//
 
 
@@ -45,10 +45,10 @@ public class SwordAction : BaseAction // Базовое действие Меч
         switch (_state) // Переключатель активурует кейс в зависимости от _state
         {
             case State.SwingingSwordBeforeHit:
-                
+
                 Vector3 aimDirection = (_targetUnit.GetWorldPosition() - transform.position).normalized; // Направление прицеливания, еденичный вектор
                 float rotateSpeed = 10f; //НУЖНО НАСТРОИТЬ//
-                
+
                 transform.forward = Vector3.Slerp(transform.forward, aimDirection, Time.deltaTime * rotateSpeed); // поворт юнита.
 
                 break;
@@ -71,7 +71,7 @@ public class SwordAction : BaseAction // Базовое действие Меч
                 _state = State.SwingingSwordAfterHit;
                 float afterHitStateTime = 1f; // Для избежания магических чисель введем переменную  Продолжительность Состояния Взмах меча после удара //НУЖНО НАСТРОИТЬ//
                 _stateTimer = afterHitStateTime;
-                SwordHit();               
+                SwordHit();
                 break;
 
             case State.SwingingSwordAfterHit:
@@ -86,20 +86,30 @@ public class SwordAction : BaseAction // Базовое действие Меч
     }
 
     private void SwordHit() // Удар мечом
-    {        
+    {
         OnAnySwordHit?.Invoke(this, new OnSwordEventArgs // создаем новый экземпляр класса OnShootEventArgs
         {
             targetUnit = _targetUnit,
             hittingUnit = _unit
         }); // Запустим событие ЛЮБОЙ Начал удар мечом и в аргумент передадим в кого ударяем и кто нанносит удар (Подписчики ScreenShakeActions ДЛЯ РЕАЛИЗАЦИИ ТРЯСКИ ЭКРАНА и UnitRagdollSpawner- для определения направления поражения)
-   
-        _targetUnit.Damage(90); // Нанесем Целевому юниту БОЛЬШОЙ урон     //НУЖНО НАСТРОИТЬ// В дальнейшем будем брать этот показатель из оружия
+
+        SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.Sword);
+
+        if (_targetUnit.GetStunned()&& !_unit.GetStunned()) // Если враг оглушенный а я нет
+        {
+            int maxDamage = Mathf.RoundToInt( _targetUnit.GetHealthMax()*0.9f); // Отнимим 90% его макс здоровья
+            _targetUnit.Damage(maxDamage);
+        }
+        else
+        {
+            _targetUnit.Damage(_swordDamage); // Нанесем Целевому юниту БОЛЬШОЙ урон     //НУЖНО НАСТРОИТЬ// В дальнейшем будем брать этот показатель из оружия
+        }
     }
 
 
     public override string GetActionName()
     {
-        return "Sword";
+        return "меч";
     }
 
     public override EnemyAIAction GetEnemyAIAction(GridPosition gridPosition) //Получить действие вражеского ИИ // Переопределим абстрактный базовый метод

@@ -60,26 +60,6 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
         UnitActionSystem.Instance.OnSelectedUnitChanged += UnitActionSystem_OnSelectedUnitChanged; //Выбранный Юнит Изменен//
     }
 
-    private void UnitActionSystem_OnSelectedUnitChanged(object sender, EventArgs e) // Если во время выполнения комбо я выделил другого юнита, то комбо надо ОСТАНОВИТЬ
-    {
-        if (_state == State.ComboSearchEnemy) // Если этот юнит в состоянии Поиска врага
-        {
-            _state = State.ComboSearchPartner;
-           if(_comboPartnerFXPrefabInstantiateTransform!=null) // Если созданы частички взаимодействия
-            {
-                Destroy(_comboPartnerFXPrefabInstantiateTransform.GameObject()); // Унистожим
-            }
-        };
-    }
-
-    private void ComboAction_OnAnyUnitComboStateChanged(object sender, OnComboEventArgs e)
-    {
-        if (e.partnerUnit == _unit) // Есля Партнер для комбо - Это Я то
-        {
-            SetState(e.state); // Изменить мое состояние
-        };
-    }
-
     private void Update()
     {
         if (!_isActive) // Если не активны то ...
@@ -101,34 +81,14 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
 
             case State.ComboSearchEnemy:
 
-                HookShoot();
+                HookShootin();
+
                 break;
 
             case State.ComboStart:
 
-                Vector3 targetPointEnemyWorldPosition = LevelGrid.Instance.GetWorldPosition(_targetPointEnemyGridPosition); // Получим позицию куда надо переместить врага
-                //_unitEnemy.transform.position = targetPointEnemyWorldPosition;
+                PullEnemy();
 
-                Vector3 moveEnemyDirection = (targetPointEnemyWorldPosition - _unitEnemy.transform.position).normalized; // Направление движения, еденичный вектор
-
-                float moveEnemySpead = 6f; //НУЖНО НАСТРОИТЬ//
-                _unitEnemy.transform.position += moveEnemyDirection * moveEnemySpead * Time.deltaTime;
-
-                // Развернем партнера и юнита в сторону врага
-                _unitPartner.transform.LookAt(_unitEnemy.transform);
-                transform.LookAt(_unitEnemy.transform);
-
-                // Расчитаем растояние от партнера до врага и от юнита до врага
-                float zDistancePartner = Vector3.Distance(_unitPartner.transform.position, _unitEnemy.transform.position);
-                _ropeRandererParten.RopeDraw(Vector3.forward * zDistancePartner);// Рисуем веревку 
-                float zDistanceUnit = Vector3.Distance(transform.position, _unitEnemy.transform.position);
-                _ropeRandererUnit.RopeDraw(Vector3.forward * zDistanceUnit); // Рисуем веревку 
-
-                float stoppingDistance = 0.2f; // Дистанция остановки //НУЖНО НАСТРОИТЬ//
-                if (Vector3.Distance(_unitEnemy.transform.position, targetPointEnemyWorldPosition) < stoppingDistance)  // Если растояние до целевой позиции меньше чем Дистанция остановки // Мы достигли цели        
-                {
-                    NextState(); //Следующие состояние
-                }
                 break;
 
             case State.ComboAfter:
@@ -140,7 +100,7 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
             NextState(); //Следующие состояние
         }
 
-        Debug.Log(_state);
+       // Debug.Log(_state);
     }
 
     private void NextState() //Автомат переключения состояний (лучше использовать для настройки)
@@ -152,7 +112,7 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
                 _comboPartnerFXPrefabInstantiateTransform = Instantiate(_comboPartnerFXPrefab, transform.position + Vector3.up * 1.7f, Quaternion.identity); // Создадим частички взаимодействия
                 _comboPartnerFXPrefabInstantiateTransform.LookAt(_unitPartner.transform.position + Vector3.up * 1.7f); // И разверну в сторону партнера
 
-                _state = State.ComboSearchEnemy;
+                _state = State.ComboSearchEnemy;                
                 OnAnyUnitComboStateChanged?.Invoke(this, new OnComboEventArgs // У юнита партнера тоже изменим состоянеи, что бы он смог правильно потратить очки действия (они GetActionPointCost() зависят от состояния)
                 {
                     partnerUnit = _unitPartner,
@@ -166,7 +126,7 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
                 ActionComplete();
                 break;
             case State.ComboStart:
-                _state = State.ComboAfter;
+                _state = State.ComboAfter;                
                 OnAnyUnitComboStateChanged?.Invoke(this, new OnComboEventArgs // У юнита партнера тоже изменим состоянеи, что бы он смог выйти из комбо цикла
                 {
                     partnerUnit = _unitPartner,
@@ -176,32 +136,33 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
                 _stateTimer = ComboAfterStateTime;
                 break;
 
-            case State.ComboAfter:
+            case State.ComboAfter: // В этом состоянии кнопки UI появляются
                 Destroy(_comboPartnerFXPrefabInstantiateTransform.GameObject());
                 _unitPartner.GetUnitRope().HideRope();
                 _unit.GetUnitRope().HideRope();
                 ActionComplete(); // Вызовим базовую функцию ДЕЙСТВИЕ ЗАВЕРШЕНО
                 break;
         }
-    }
+    }    
 
-    private void HookShoot()
+    private void HookShootin() // Стрельба КРЮКОМ
     {
-       float rotateSpeed = 10f;
+        float rotateSpeed = 10f;
         Vector3 partnerEnemyDirection = (_unitEnemy.transform.position - _unitPartner.transform.position).normalized; // Направление к целивому юниту, еденичный вектор
         Vector3 unitEnemyDirection = (_unitEnemy.transform.position - transform.position).normalized; // Направление к целивому юниту, еденичный вектор
-                                                                                                      
+
         // развернем партнера и самого юнита
         _unitPartner.transform.forward = Vector3.Slerp(_unitPartner.transform.forward, partnerEnemyDirection, Time.deltaTime * rotateSpeed); // поворт юнита.
         transform.forward = Vector3.Slerp(transform.forward, unitEnemyDirection, Time.deltaTime * rotateSpeed); // поворт юнита.
-        
+
         // Когда развернусь 
         if (Vector3.Dot(unitEnemyDirection, transform.forward) >= 0.95f) // Точка возвращает 1, если они указывают в одном и том же направлении, -1, если они указывают в совершенно противоположных направлениях, и ноль, если векторы перпендикулярны.
         {
             //Стреляем веревкой
             Vector3 enemuAimPoint = _unitEnemy.GetAction<ShootAction>().GetAimPoinTransform().position; // Точка прицеливания уврага
+            // Развернем веревку в сторону врага (будем работать с локальной Z)
             _ropeRandererParten.transform.LookAt(enemuAimPoint);
-            _ropeRandererUnit.transform.LookAt(enemuAimPoint);
+            _ropeRandererUnit.transform.LookAt(enemuAimPoint);          
 
             float speedShootRope = 12;
             zOffset += Time.deltaTime * speedShootRope;
@@ -218,14 +179,64 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
             if (zOffset >= Vector3.Distance(_unitPartner.transform.position, _unitEnemy.transform.position) &&
                 zOffset >= Vector3.Distance(transform.position, _unitEnemy.transform.position))
             {
+                SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.HookShoot);
                 NextState(); //Следующие состояние
             }
         }
     }
 
+    private void PullEnemy() // Тяним врага
+    {
+        Vector3 targetPointEnemyWorldPosition = LevelGrid.Instance.GetWorldPosition(_targetPointEnemyGridPosition); // Получим позицию куда надо переместить врага                
+
+        Vector3 moveEnemyDirection = (targetPointEnemyWorldPosition - _unitEnemy.transform.position).normalized; // Направление движения, еденичный вектор
+
+        float moveEnemySpead = 6f; //НУЖНО НАСТРОИТЬ//
+        _unitEnemy.transform.position += moveEnemyDirection * moveEnemySpead * Time.deltaTime;              
+
+        // Развернем партнера и юнита в сторону врага
+        _unitPartner.transform.LookAt(_unitEnemy.transform);
+        transform.LookAt(_unitEnemy.transform);
+
+        // Расчитаем растояние от партнера до врага и от юнита до врага
+        float zDistancePartner = Vector3.Distance(_unitPartner.transform.position, _unitEnemy.transform.position);
+        _ropeRandererParten.RopeDraw(Vector3.forward * zDistancePartner);// Рисуем веревку 
+        float zDistanceUnit = Vector3.Distance(transform.position, _unitEnemy.transform.position);
+        _ropeRandererUnit.RopeDraw(Vector3.forward * zDistanceUnit); // Рисуем веревку 
+
+        float stoppingDistance = 0.2f; // Дистанция остановки //НУЖНО НАСТРОИТЬ//
+        if (Vector3.Distance(_unitEnemy.transform.position, targetPointEnemyWorldPosition) < stoppingDistance)  // Если растояние до целевой позиции меньше чем Дистанция остановки // Мы достигли цели        
+        {
+            float stunPercent = 0.3f; // Процент ОГЛУШЕНИЯ
+            _unitEnemy.Stun(stunPercent); //НУЖНО НАСТРОИТЬ// Оглушим
+            SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.HookPull);
+            NextState(); //Следующие состояние
+        }
+    }
+
+    private void UnitActionSystem_OnSelectedUnitChanged(object sender, EventArgs e) // Если во время выполнения комбо я выделил другого юнита, то комбо надо ОСТАНОВИТЬ
+    {
+        if (_state == State.ComboSearchEnemy) // Если этот юнит в состоянии Поиска врага
+        {
+            _state = State.ComboSearchPartner;
+            if (_comboPartnerFXPrefabInstantiateTransform != null) // Если созданы частички взаимодействия
+            {
+                Destroy(_comboPartnerFXPrefabInstantiateTransform.GameObject()); // Уничтожим
+            }
+        };
+    }
+
+    private void ComboAction_OnAnyUnitComboStateChanged(object sender, OnComboEventArgs e)
+    {
+        if (e.partnerUnit == _unit) // Есля Партнер для комбо - Это Я то
+        {
+            SetState(e.state); // Изменить мое состояние
+        };
+    }
+
     public override string GetActionName() // Присвоить базовое действие //целиком переопределим базовую функцию
     {
-        return "Combo";
+        return "крюк";
     }
 
     public override EnemyAIAction GetEnemyAIAction(GridPosition gridPosition) //Получить действие вражеского ИИ // Переопределим абстрактный базовый метод
@@ -233,7 +244,7 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
         return new EnemyAIAction
         {
             gridPosition = gridPosition,
-            actionValue = 50, //Поставим среднее значение действия. Будет выполнять Комбо если ничего другого сделать не может, 
+            actionValue = 40, //Поставим среднее значение действия. Будет выполнять Комбо если ничего другого сделать не может, 
         };
     }
 
@@ -242,21 +253,8 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
         List<GridPosition> validGridPositionList = new List<GridPosition>();
 
         GridPosition unitGridPosition = _unit.GetGridPosition(); // Получим позицию в сетке юнита
-        int maxComboDistance;
 
-        switch (_state)
-        {
-            default:
-            case State.ComboSearchPartner:
-            case State.ComboStart:
-                maxComboDistance = _maxComboPartnerDistance;
-                break;
-
-            case State.ComboSearchEnemy:
-                maxComboDistance = _maxComboEnemyDistance;
-                break;
-        }
-
+        int maxComboDistance = GetMaxComboDistance();      
         for (int x = -maxComboDistance; x <= maxComboDistance; x++) // Юнит это центр нашей позиции с координатами unitGridPosition, поэтому переберем допустимые значения в условном радиусе maxComboDistance
         {
             for (int z = -maxComboDistance; z <= maxComboDistance; z++)
@@ -281,15 +279,19 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
                     default:
                     case State.ComboSearchPartner:
 
+                        if (_unit.GetActionPoints() < _searchEnemyPointCost) // Если у юнита не хватает очков для дальнейшего действия то (т.к. поиск ПАРТНЕНРА ничего НЕ СТОИТ, если нет очков то и нефик начить)
+                        {
+                            return validGridPositionList; // Вернкм пустой список
+                        }
+
                         if (!LevelGrid.Instance.HasAnyUnitOnGridPosition(testGridPosition)) // Исключим сеточное позицию где нет юнитов 
                         {
                             // Позиция сетки пуста, нет Юнитов
                             continue;
                         }
 
-                        targetUnit = LevelGrid.Instance.GetUnitAtGridPosition(testGridPosition);   // Получим юнита из нашей тестируемой сеточной позиции 
-                                                                                                   // GetUnitAtGridPosition может вернуть null но в коде выше мы исключаем нулевые позиции, так что проверка не нужна
-                                                                                                   // Если ищем Партнера то ИСКЛЮЧИМ ВРАГОВ
+                        // Если ищем Партнера то ИСКЛЮЧИМ ВРАГОВ
+                        targetUnit = LevelGrid.Instance.GetUnitAtGridPosition(testGridPosition);   // Получим юнита из нашей тестируемой сеточной позиции  // GetUnitAtGridPosition может вернуть null но в коде выше мы исключаем нулевые позиции, так что проверка не нужна                        
                         if (targetUnit.IsEnemy() != _unit.IsEnemy()) // Если тестируемый не в моей команде (игнорируем его)
                         {
                             continue;
@@ -325,9 +327,8 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
                             continue;
                         }
 
-                        targetUnit = LevelGrid.Instance.GetUnitAtGridPosition(testGridPosition);   // Получим юнита из нашей тестируемой сеточной позиции 
-                                                                                                   // GetUnitAtGridPosition может вернуть null но в коде выше мы исключаем нулевые позиции, так что проверка не нужна
-                                                                                                   // Если ищем врага то ИСКЛЮЧИМ ДРУЖЕСТВЕННЫХ ЮНИТОВ
+                        // Если ищем врага то ИСКЛЮЧИМ ДРУЖЕСТВЕННЫХ ЮНИТОВ
+                        targetUnit = LevelGrid.Instance.GetUnitAtGridPosition(testGridPosition);   // Получим юнита из нашей тестируемой сеточной позиции // GetUnitAtGridPosition может вернуть null но в коде выше мы исключаем нулевые позиции, так что проверка не нужна
                         if (targetUnit.IsEnemy() == _unit.IsEnemy()) // Если тестируемый в одной команде (игнорируем его)
                         {
                             continue;
@@ -348,14 +349,7 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
                         }
                         break;
 
-                    case State.ComboStart:
-
-                        /*// Для области выстрела КРЮКОМ сделаем ромб а не квадрат
-                        testDistance = Mathf.Abs(x) + Mathf.Abs(z); // Сумма двух положительных координат сеточной позиции
-                        if (testDistance > maxComboDistance) //Получим фигуру из ячеек в виде ромба // Если юнит в (0,0) то ячейка с координатами (5,4) уже не пройдет проверку 5+4>7
-                        {
-                            continue;
-                        }*/
+                    case State.ComboStart:                      
 
                         if (LevelGrid.Instance.HasAnyUnitOnGridPosition(testGridPosition)) // Исключим сеточное позицию С ЮНИТАМИ. бедем перемещать захваченного юнита на пустую
                         {
@@ -384,26 +378,28 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
                         }
                         break;
                 }
-
                 validGridPositionList.Add(testGridPosition); // Добавляем в список те позиции которые прошли все тесты
+                                                             
                 //Debug.Log(testGridPosition);
             }
         }
         return validGridPositionList;
     }
 
-    public override void TakeAction(GridPosition gridPosition, Action onActionComplete) // (onActionComplete - по завершении действия). В аргумент будем передовать делегат Action 
-                                                                                        // В данном методе добавлен аргумент который мы не используем - GridPosition _gridPosition - он добавлен лишь для того чтобы соответствовать сигнатуре Базовой функции TakeAction.
-                                                                                        // Есть другой способ, создать оттдельный - public class BaseParameters{} 
-                                                                                        // и наследуемый в котором можно переопределить наш базовый параметр -
-                                                                                        // public SpinBaseParameters : BaseParameters{}
-                                                                                        // тогда запишем - public override void TakeAction(BaseParameters baseParameters ,Action onActionComplete){
-                                                                                        // SpinBaseParameters spinBaseParameters = (SpinBaseParameters)baseParameters;}
+    public override void TakeAction(GridPosition gridPosition, Action onActionComplete) // Выполнение действий  (onActionComplete - по завершении действия). В аргумент будем передовать делегат Action 
     {
         if (_state == State.ComboAfter)// Если до этого у юнита было состояние - После Комбо то 
         {
             _state = State.ComboSearchPartner;
         }
+
+        SetupTakeActionFromState(gridPosition);
+
+        ActionStart(onActionComplete); // Вызовим базовую функцию СТАРТ ДЕЙСТВИЯ разрешает доступ к UPDATE// Вызываем этот метод в конце после всех настроек т.к. в этом методе есть EVENT и он должен запускаться после всех настроек
+    }
+
+    private void SetupTakeActionFromState(GridPosition gridPosition) //Настроить Выполнение действий в зависимости от состояния
+    {
         switch (_state)
         {
             default:
@@ -433,8 +429,6 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
                 _stateTimer = ComboStartStateTime;
                 break;
         }
-
-        ActionStart(onActionComplete); // Вызовим базовую функцию СТАРТ ДЕЙСТВИЯ разрешает доступ к UPDATE// Вызываем этот метод в конце после всех настроек т.к. в этом методе есть EVENT и он должен запускаться после всех настроек
     }
 
     public override int GetActionPointCost() // Переопределим базовую функцию // Получить Расход Очков на Действие (Стоимость действия)
@@ -450,14 +444,27 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
         }
     }
 
-    public int GetMaxComboEnemyDistance()
+    public int GetMaxComboDistance()
     {
-        return _maxComboEnemyDistance;
-    }
-    public int GetMaxComboPartnerDistance()
-    {
-        return _maxComboPartnerDistance;
-    }
+        int maxComboDistance;
+        switch (_state)
+        {
+            default:
+            case State.ComboSearchPartner:
+
+                maxComboDistance = _maxComboPartnerDistance;
+                break;
+
+            case State.ComboSearchEnemy:
+                maxComboDistance = _maxComboEnemyDistance;
+                break;
+
+            case State.ComboStart:
+                maxComboDistance = _maxComboPartnerDistance;
+                break;
+        }
+        return maxComboDistance;
+    }    
     public State GetState()
     {
         return _state;

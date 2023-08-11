@@ -23,11 +23,11 @@ public class GrenadeStunAction : GrenadeAction
         return new EnemyAIAction
         {
             gridPosition = gridPosition,
-            actionValue = 50, //ѕоставим значение действи€. Ѕудет бросать гранату если ничего другого сделать не может, 
+            actionValue = 55, //ѕоставим значение действи€. Ѕудет бросать гранату если ничего другого сделать не может, 
         };
     }
     public override string GetActionName() // ѕрисвоить базовое действие //целиком переопределим базовую функцию
     {
-        return "Stun";
+        return "шокова€";
     }    
 }

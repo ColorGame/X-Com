@@ -7,6 +7,7 @@ public class LevelScripting : MonoBehaviour // Уровень. Отвечает за взаимодейств
 {
     public static LevelScripting Instance { get; private set; }   //(ПАТТЕРН SINGLETON) Это свойство которое может быть заданно (SET-присвоено) только этим классом, но может быть прочитан GET любым другим классом
                                                                   // instance - экземпляр, У нас будет один экземпляр LevelScripting можно сдел его static. Instance нужен для того чтобы другие методы, через него, могли подписаться на Event.
+    public static event EventHandler OnAnyEnemyUnitActive; // Любой враг активирован
 
     public event EventHandler<DoorInteract> OnInteractSphereAndDoor; // Создадим событие - Сфера и Дверь Взаимодействуют //  <> -generic этот тип будем вторым аргументом
 
@@ -177,6 +178,11 @@ public class LevelScripting : MonoBehaviour // Уровень. Отвечает за взаимодейств
         {
             gameObject.SetActive(isActive);
         }
+        if(isActive) // Создадим события только при активации
+        {
+            OnAnyEnemyUnitActive?.Invoke(this, EventArgs.Empty);
+        }
+      
     }
 
     private void InteractSphereAndDoor(DoorInteract doorInteract) // Взаимодействуют сфера и дверь

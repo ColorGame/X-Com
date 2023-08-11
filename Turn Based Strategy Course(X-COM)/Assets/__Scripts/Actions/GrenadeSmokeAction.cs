@@ -28,6 +28,6 @@ public class GrenadeSmokeAction : GrenadeAction
     }
     public override string GetActionName() // Присвоить базовое действие //целиком переопределим базовую функцию
     {
-        return "Smoke";
+        return "дымовая";
     }    
 }

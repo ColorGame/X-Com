@@ -167,18 +167,18 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
                 if (comboAction.GetState() == ComboAction.State.ComboStart)
                 {
                     UpdateVisualSelectedQuadComboAction(comboAction, e);
-                }                
+                }
                 break;
         }
     }
 
     private void UpdateVisualSelectedQuadComboAction(ComboAction comboAction, MouseWorld.OnMouseGridPositionChangedEventArgs e)
-    {        
+    {
         _gridSystemVisualSingleArray[e.lastMouseGridPosition.x, e.lastMouseGridPosition.z, e.lastMouseGridPosition.floor].HideQuad(); // Скроем квадрат на предыдущей ячейки
         GridPosition mouseGridPosition = e.newMouseGridPosition; // Сеточная позиция мыши
 
         if (_validActionGridPositionForComboActionList.Contains(mouseGridPosition)) // Если Сеточная позиция мыши входит в Допустимый диапазон то ...
-        {            
+        {
             _gridSystemVisualSingleArray[mouseGridPosition.x, mouseGridPosition.z, mouseGridPosition.floor].ShowQuad(GetGridVisualTypeMaterial(GridVisualType.Red)); // Покажем для нашей сеточной позиции квадрат красного цвета
         }
     }
@@ -325,21 +325,25 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
                     default:
                     case ComboAction.State.ComboSearchPartner: // Если ищем Партнера для комбо
                         gridVisualType = GridVisualType.Green;
-                        ShowGridPositionRange(selectedUnit.GetGridPosition(), comboAction.GetMaxComboPartnerDistance(), GridVisualType.GreenSoft, false); // Покажем диапазон 
+                        ShowGridPositionRange(selectedUnit.GetGridPosition(), comboAction.GetMaxComboDistance(), GridVisualType.GreenSoft, false); // Покажем диапазон 
                         break;
 
                     case ComboAction.State.ComboSearchEnemy: // Если Ищем врага то
                         gridVisualType = GridVisualType.Red;
-                        ShowGridPositionRange(selectedUnit.GetGridPosition(), comboAction.GetMaxComboEnemyDistance(), GridVisualType.RedSoft, true); // Покажем диапазон  РОМБ-true
+                        ShowGridPositionRange(selectedUnit.GetGridPosition(), comboAction.GetMaxComboDistance(), GridVisualType.RedSoft, true); // Покажем диапазон  РОМБ-true
                         break;
 
-                    case ComboAction.State.ComboStart:
+                    case ComboAction.State.ComboStart: // Ячейки куда надо перетащить
                         gridVisualType = GridVisualType.RedSoft;
                         _validActionGridPositionForComboActionList = selectedAction.GetValidActionGridPositionList();
                         break;
 
                 }
+                break;
 
+            case SpotterFireAction spotterFireAction: // Корректировка огня -ЗЕЛЕННЫЙЙ
+                gridVisualType = GridVisualType.Green;
+                ShowGridPositionRange(selectedUnit.GetGridPosition(), spotterFireAction.GetSpotterFireDistance(), GridVisualType.GreenSoft, false); // Покажем диапазон 
                 break;
         }
 

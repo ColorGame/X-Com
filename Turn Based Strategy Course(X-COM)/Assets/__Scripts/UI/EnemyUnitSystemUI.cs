@@ -1,0 +1,63 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class EnemyUnitSystemUI : MonoBehaviour
+{
+    [SerializeField] private Transform _enemyUnitButonUIPrefab; // В инспекторе закинем префаб Кнопки
+    [SerializeField] private Transform _enemyUnitButonContainerTransform; // В инспекторе назначить  Контейнер для кнопок( находиться в сцене в Canvas)
+
+
+    private List<EnemyUnitButonUI> _enemyUnitButonUIList; // Список кнопок Вражеских Юнитов
+
+    private void Awake()
+    {
+        _enemyUnitButonUIList = new List<EnemyUnitButonUI>();
+    }
+
+    private void Start()
+    {
+        UnitManager.OnAnyUnitDeadAndRemoveList += UnitManager_OnAnyUnitDeadAndRemoveList;// Событие Любой Юнит Умер И Удален из Списка
+      //  LevelScripting.OnAnyEnemyUnitActive += LevelScripting_OnAnyEnemyUnitActive;  // НЕ РАБОТАЕТ
+        InteractAction.OnAnyInteractActionComplete += InteractAction_OnAnyInteractActionComplete;
+        CreateEnemyUnitButtons(); // Создать Кнопки для  Юнитов
+    }
+
+    private void InteractAction_OnAnyInteractActionComplete(object sender, EventArgs e)
+    {
+        CreateEnemyUnitButtons(); // Создать Кнопки для  Юнитов
+    }
+
+   /* private void LevelScripting_OnAnyEnemyUnitActive(object sender, EventArgs e)
+    {
+        CreateEnemyUnitButtons();
+    }*/
+
+    private void UnitManager_OnAnyUnitDeadAndRemoveList(object sender, EventArgs e)
+    {
+        CreateEnemyUnitButtons();
+    }
+
+    private void CreateEnemyUnitButtons() // Создать Кнопки для Дружественныйх Юнитов
+    {
+        foreach (Transform buttonTransform in _enemyUnitButonContainerTransform) // Очистим контейнер с кнопками
+        {
+            Destroy(buttonTransform.gameObject); // Удалим игровой объект прикрипленный к Transform
+        }
+
+        _enemyUnitButonUIList.Clear(); // Очистим сисок кнопок
+
+        foreach (Unit unit in UnitManager.Instance.GetEnemyUnitList())// Переберем вражеских юнитов
+        {
+            if (unit.gameObject.activeSelf) // Если юнит активный то 
+            {
+                Transform actionButtonTransform = Instantiate(_enemyUnitButonUIPrefab, _enemyUnitButonContainerTransform); // Для каждого ЮНИТА создадим префаб кнопки и назначим родителя - Контейнер для кнопок
+                EnemyUnitButonUI enemyUnitButonUI = actionButtonTransform.GetComponent<EnemyUnitButonUI>();// У кнопки найдем компонент EnemyUnitButonUI
+                enemyUnitButonUI.SetUnit(unit);//Назвать и Присвоить
+
+                _enemyUnitButonUIList.Add(enemyUnitButonUI);// Добавим в список нашу кнопку
+            }
+        }
+    }
+}

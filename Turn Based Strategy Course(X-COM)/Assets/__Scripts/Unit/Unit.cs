@@ -11,8 +11,8 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
 
     // для // РЕШЕНИЕ 2 //в UnitActionSystemUI
     public static event EventHandler OnAnyActionPointsChanged;  // static - обозначает что event будет существовать для всего класса не зависимо от того скольго у нас созданно Юнитов. Поэтому для прослушивания этого события слушателю не нужна ссылка на какую-либо конкретную единицу, они могут получить доступ к событию через класс, который затем запускает одно и то же событие для каждой единицы. 
-                                                                // Мы запустим событие Event при изменении очков действий у ЛЮБОГО(Any) юнита а не только у выбранного.
-
+                                                                // изменении очков действий у ЛЮБОГО(Any) юнита а не только у выбранного.
+    public static event EventHandler OnAnyFriendlyUnitDamage; //Любой дружественный Юнит получил урон
     public static event EventHandler OnAnyUnitSpawned; // Событие Любой Рожденный(созданный) Юнит
     public static event EventHandler OnAnyUnitDead; // Событие Любой Мертвый Юнит
 
@@ -25,14 +25,17 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
     private BaseAction[] _baseActionsArray; // Массив базовых действий // Будем использовать при создании кнопок   
     private UnitRope _unitRope;
     private int _actionPoints = ACTION_POINTS_MAX; // Очки действия
-    private float _penaltyStunPercentNextTurn;  // Штрафной процент оглушения на следующем ходе
+    private float _penaltyStunPercent;  // Штрафной процент оглушения (будем применять в след ход)
+    private bool _stunned = false; // Оглушенный(по умолчанию ложь)
+    /*private int _startStunTurnNumber; //Номер очереди (хода) при старте события оглушения
+    private int _durationStunEffectTurnNumber; // Продолжительность оглушающего эффекта Количество ходов*/
 
     private void Awake()
     {
         _healthSystem = GetComponent<HealthSystem>();
 
         if (TryGetComponent<UnitRope>(out UnitRope unitRope))
-            {
+        {
             _unitRope = unitRope;
         }
         _baseActionsArray = GetComponents<BaseAction>(); // _moveAction и _spinAction также будут храниться внутри этого массива
@@ -44,8 +47,7 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
         _gridPosition = LevelGrid.Instance.GetGridPosition(transform.position); //Получим позицию юнита на сетке. Для этого преобразуем мировую позицию ЮНИТА в позицию на СЕТКЕ
         LevelGrid.Instance.AddUnitAtGridPosition(_gridPosition, this); // Зайдем в LevelGrid получим доступ к статическому экземпляру и вызовим AddUnitAtGridPosition
 
-        TurnSystem.Instance.OnTurnChanged += TurnSystem_OnTurnChanged; // подписываемся на Event // Будет выполняться (сброс очков действий) каждый раз когда изменен номер хода.
-
+        TurnSystem.Instance.OnTurnChanged += TurnSystem_OnTurnChanged; // Подпиш. на событие Ход Изменен        
         _healthSystem.OnDead += HealthSystem_OnDead; // подписываемся на Event. Будет выполняться при смерти юнита
 
         OnAnyUnitSpawned?.Invoke(this, EventArgs.Empty); // Запустим событие Любой Рожденный(созданный) Юнит. Событие статичное поэтому будет выполняться для всех созданных Юнитов
@@ -134,18 +136,32 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
     }
 
 
-    public void TurnSystem_OnTurnChanged(object sender, EventArgs empty) // Сбросим очки действий до максимальных
+    public void TurnSystem_OnTurnChanged(object sender, EventArgs empty) //Ход изменен Сбросим очки действий до максимальных
     {
         if ((IsEnemy() && !TurnSystem.Instance.IsPlayerTurn()) || // Если это враг И его очередь (НЕ очередь игрока) ИЛИ это НЕ враг(игрок) и очередь игрока то...
             (!IsEnemy() && TurnSystem.Instance.IsPlayerTurn()))
         {
             _actionPoints = ACTION_POINTS_MAX;
-
-            if (_penaltyStunPercentNextTurn != 0) // Если есть штраф то применим
+            
+            if (_penaltyStunPercent!=0)
             {
-                _actionPoints -= Mathf.RoundToInt(_actionPoints * _penaltyStunPercentNextTurn); // Если _penaltyStunPercentNextTurn со знаком"-" то очки увеличаться
-                _penaltyStunPercentNextTurn = 0; // И обнулим штраф
+                _actionPoints -= Mathf.RoundToInt(_actionPoints * _penaltyStunPercent); // Применим штраф
+                _penaltyStunPercent = 0;
+                SetStunned(false); // Отключим оглушение
             }
+
+            //  БОлее сложная распространяется на след ход
+            /*int passedTurnNumber = TurnSystem.Instance.GetTurnNumber() - _startStunTurnNumber;// прошло ходов от начала Оглушения
+            if (passedTurnNumber <= _durationStunEffectTurnNumber) // Если ходов прошло меньше или равно длительности ОГЛУШЕНИЯ (Значит оглушение еще действует)
+            {
+                _actionPoints -= Mathf.RoundToInt(_actionPoints * _penaltyStunPercent); // Применим штраф
+                _penaltyStunPercent = _penaltyStunPercent *0.3f; // Уменьшим штраф оставим 30% от изначального (это надо Если оглушение длиться несколько ходов)
+            }
+            if (passedTurnNumber > _durationStunEffectTurnNumber) //Если ходов прошло больше продолжительности ОГЛУШЕНИЯ
+            {
+                SetStunned(false); // Отключим оглушение
+                _penaltyStunPercent = 0; // И обнулим штраф
+            }  */
 
             OnAnyActionPointsChanged?.Invoke(this, EventArgs.Empty); // запускаем событие ПОСЛЕ обнавления очков действий.(для // РЕШЕНИЕ // 2 //в UnitActionSystemUI)
         }
@@ -164,16 +180,27 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
     public void Damage(int damageAmount) // Урон (в аргумент передаем величину повреждения)
     {
         _healthSystem.Damage(damageAmount);
+        if(!_isEnemy)// Если НЕ ВРАГ то
+        {
+            OnAnyFriendlyUnitDamage?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public void Stun(float stunPercent) // Оглушить на stunPercent(процент оглушения)
     {
-        if (_actionPoints <= 0) // Если очков хода нет то применить штрав к след. ходу
-        {
-            _penaltyStunPercentNextTurn = stunPercent * 0.5f; // Половина от начального Процента Оглушения
-        }
-        _actionPoints -= Mathf.RoundToInt(_actionPoints * stunPercent);
+        SetStunned(true);
+        _penaltyStunPercent = stunPercent; // Установим Процента Оглушения
 
+        /*// БОлее сложная распространяется на след ход
+        _startStunTurnNumber = TurnSystem.Instance.GetTurnNumber(); // Получим стартовый номер хода              
+        if (_actionPoints > 0) // Если очков хода больше нуля
+        {
+            _durationStunEffectTurnNumber = 1; //Нужно НАСТРОИТЬ// Оглушение будет длиться весь следующий ход
+        }
+        if(_actionPoints<=0) // Если очков хода нету
+        {
+            _durationStunEffectTurnNumber = 3; //Нужно НАСТРОИТЬ// Оглушение будет длиться следующие 3 хода (через ход врага)
+        }*/
         OnAnyActionPointsChanged?.Invoke(this, EventArgs.Empty); // запускаем событие ПОСЛЕ обнавления очков действий.
     }
 
@@ -194,20 +221,21 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
     {
         return _healthSystem.GetHealthNormalized();
     }
-
     public int GetHealth() // Раскроем для чтения
     {
         return _healthSystem.GetHealth();
     }
-
     public int GetHealthMax() // Раскроем для чтения
     {
         return _healthSystem.GetHealthMax();
     }
-
     public bool IsDead()
     {
         return _healthSystem.IsDead();
+    }
+    public HealthSystem GetHealthSystem()
+    {
+        return _healthSystem;
     }
 
     public UnitRope GetUnitRope()
@@ -215,7 +243,13 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
         return _unitRope;
     }
 
-    
-
+    public bool GetStunned()
+    {
+        return _stunned;
+    }
+    private void SetStunned(bool stunned)
+    {
+        _stunned = stunned;
+    }
 
 }

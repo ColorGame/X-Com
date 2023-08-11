@@ -19,7 +19,7 @@ public class HealAction : BaseAction // Действие Лечение НАСЛЕДУЕТ класс BaseAct
         HealAfter,  //После Лечение
     }
 
-
+    private int _healAmount = 50;
     private State _state; // Состояние юнита
     private float _stateTimer; //Таймер состояния
     private Unit _targetUnit;// Юнит которого лечим
@@ -75,7 +75,7 @@ public class HealAction : BaseAction // Действие Лечение НАСЛЕДУЕТ класс BaseAct
                 break;
 
             case State.HealAfter:
-
+               
                 OnHealActionCompleted?.Invoke(this, _targetUnit);  // Запустим событие Действие Лечение Закончилочь (подписчик UnitAnimator, где будем ВКЛЮЧАТЬ ОРУЖИЕ)
 
                 ActionComplete(); // Вызовим базовую функцию ДЕЙСТВИЕ ЗАВЕРШЕНО
@@ -87,12 +87,13 @@ public class HealAction : BaseAction // Действие Лечение НАСЛЕДУЕТ класс BaseAct
 
     private void Heal() // Лечение
     {
-       _targetUnit.Healing(50);
+        SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.Heal);
+        _targetUnit.Healing(_healAmount);
     }
 
     public override string GetActionName() // Присвоить базовое действие //целиком переопределим базовую функцию
     {
-        return "Heal";
+        return "аптечка";
     }
 
     public override EnemyAIAction GetEnemyAIAction(GridPosition gridPosition) //Получить действие вражеского ИИ // Переопределим абстрактный базовый метод

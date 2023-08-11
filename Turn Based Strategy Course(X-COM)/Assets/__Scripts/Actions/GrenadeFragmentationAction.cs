@@ -22,12 +22,12 @@ public class GrenadeFragmentationAction : GrenadeAction // Осколочная граната
         return new EnemyAIAction
         {
             gridPosition = gridPosition,
-            actionValue = 50, //Поставим значение действия. Будет бросать гранату если ничего другого сделать не может, 
+            actionValue = 60, //Поставим значение действия. Будет бросать гранату если ничего другого сделать не может, 
         };
     }
     public override string GetActionName() // Присвоить базовое действие //целиком переопределим базовую функцию
     {
-        return "Fragmentation";
+        return "осколочная";
     }   
 
     

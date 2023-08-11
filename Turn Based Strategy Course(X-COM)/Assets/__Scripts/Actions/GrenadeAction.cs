@@ -23,7 +23,7 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
     protected float _stateTimer; //Таймер состояния      
 
 
-    protected int _maxThrowDistance = 7; //Максимальная дальность броска //НУЖНО НАСТРОИТЬ//
+    protected int _maxThrowDistance = 5; //Максимальная дальность броска //НУЖНО НАСТРОИТЬ//
     protected GridPosition _targetGridPositin;
     protected GrenadeProjectile _grenadeProjectile;
     protected HandleAnimationEvents _handleAnimationEvents; // Обработчик Анимационных событий
@@ -89,8 +89,9 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
             case State.GrenadeBefore:
 
                 _state = State.GrenadeInstantiate;
+                SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.GrenadeThrow);
                 //float grenadeInstantiateStateTime = 0.5f; // Для избежания магических чисель введем переменную  Продолжительность Состояния Создание Гранаты //НУЖНО НАСТРОИТЬ// Можно ЗДЕСЬ настроить время создания ГРАНАТЫ (сейчас использую AnimationEvent)
-                //_stateTimer = grenadeInstantiateStateTime;                               
+                //_musicTimer = grenadeInstantiateStateTime;                               
 
                 break;
 
@@ -177,7 +178,7 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
         return validGridPositionList;
     }
 
-    public override void TakeAction(GridPosition gridPosition, Action onActionComplete)  // Переопределим TakeAction (Применить Действие (Действовать). (Делегат onActionComplete - по завершении действия). в нашем случае делегату передаем функцию ClearBusy - очистить занятость
+    public override void TakeAction(GridPosition gridPosition, Action onActionComplete)  // Переопределим TakeAction Выполнение действий . (Делегат onActionComplete - по завершении действия). в нашем случае делегату передаем функцию ClearBusy - очистить занятость
     {
         _state = State.GrenadeBefore; // Активируем состояние Подготовки ГРАНАТЫ
         float beforeGrenadeStateTime = 0.5f; //До ГРАНАТЫ.  Для избежания магических чисель введем переменную  Продолжительность Состояния подготовки перед ГРАНАТОЙ ..//НУЖНО НАСТРОИТЬ//

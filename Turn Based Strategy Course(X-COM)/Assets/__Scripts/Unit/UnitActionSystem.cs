@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using static UnityEngine.UI.CanvasScaler;
 
 
 // Этот клас важен и он должен просыпаться самым первым. Настроим его, добавим в Project Settings/ Script Execution Order и поместим выше Deafault Time
@@ -47,7 +48,7 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
 
     private void Start()
     {      
-        SetSelectedUnit(_selectedUnit); // Присвоить(Установить) выбранного юнита, Установить Выбранное Действие, 
+        SetSelectedUnit(_selectedUnit, _selectedUnit.GetAction<MoveAction>()); // Присвоить(Установить) выбранного юнита, Установить Выбранное Действие, 
                                         // При старте в _selectedUnit передается юнит по умолчанию
         
         UnitManager.OnAnyUnitDeadAndRemoveList += UnitManager_OnAnyUnitDeadAndRemoveList; //Подпишемся на событие Любой Юнит Умер И Удален из Списка
@@ -61,7 +62,7 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
             List<Unit> friendlyUnitList = UnitManager.Instance.GetFriendlyUnitList(); // Вернем список дружественных юнитов
             if (friendlyUnitList.Count > 0) // Если есть живые то передаем выделению первому по списку юниту
             {
-                SetSelectedUnit(friendlyUnitList[0]);
+                SetSelectedUnit(friendlyUnitList[0], friendlyUnitList[0].GetAction<MoveAction>());
             }
         };
     }
@@ -73,7 +74,7 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
             List<Unit> friendlyUnitList = UnitManager.Instance.GetFriendlyUnitList(); // Вернем список дружественных юнитов
             if (friendlyUnitList.Count > 0) // Если есть живые то передаем выделению первому по списку юниту
             {
-                SetSelectedUnit(friendlyUnitList[0]);
+                SetSelectedUnit(friendlyUnitList[0], friendlyUnitList[0].GetAction<MoveAction>());
             }
             else // Если нет никого в живых то КОНЕЦ
             {
@@ -108,7 +109,7 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
         HandleSelectedAction(); // Обработать выбранное действие        
     }
 
-    private void HandleSelectedAction() // Обработать выбранное действие
+    public void HandleSelectedAction() // Обработать выбранное действие
     {
         if (InputManager.Instance.IsMouseButtonDownThisFrame()) // При нажатии лев кнопки мыши 
         {
@@ -171,7 +172,7 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
                         // ЭТО ВРАГ ЕГО ВЫБИРАТЬ НЕ НАДО
                         return false;
                     }
-                    SetSelectedUnit(unit); // Объект (Юнит) в который попал луч становиться ВЫБРАННЫМ.
+                    SetSelectedUnit(unit, unit.GetAction<MoveAction>()); // Объект (Юнит) в который попал луч становиться ВЫБРАННЫМ.
                     return true;
                 }
             }
@@ -179,19 +180,12 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
         return false; // если нечего не выбрали
     }
 
-    private void SetSelectedUnit(Unit unit) // Присвоить(Установить) выбранного юнита, Установить базовое Действие, И запускаем событие   
+    public void SetSelectedUnit(Unit unit, BaseAction baseAction) // Присвоить(Установить) выбранного юнита,и Установить базовое Действие, И запускаем событие   
     {
         _selectedUnit = unit; // аргумент переданный в этот метод становиться ВЫБРАННЫМ юнитом.
 
-        SetSelectedAction(unit.GetAction<MoveAction>()); // Получим компонент "MoveAction"  нашего Выбранного юнита (по умолчанию при старте базовым действием бедет MoveAction). Сохраним в переменную _selectedAction через функцию SetSelectedAction()
-
-        /*if (OnSelectedUnitChanged != null)
-        {
-            OnSelectedUnitChanged(this, EventArgs.Empty); //this-ссылка на объект который запускает событие (объект отправителя). У нас нет аргумента поэтому передаем пустоту Empty
-        }*/
-        // Сокращеный способ записи кода ниже
-        //  При вызове событий мы можем столкнуться с тем, что событие равно null в случае, если для него не определен обработчик(подписчик).
-        //  Поэтому при вызове события (event) лучше его всегда проверять на null.
+        SetSelectedAction(baseAction); // Получим компонент "MoveAction"  нашего Выбранного юнита (по умолчанию при старте базовым действием бедет MoveAction). Сохраним в переменную _selectedAction через функцию SetSelectedAction()
+                
         OnSelectedUnitChanged?.Invoke(this, EventArgs.Empty); // "?"- проверяем что !=0. Invoke вызвать (this-ссылка на объект который запускает событие "отправитель" а класс UnitSelectedVisual и UnitActionSystemUI будет его прослушивать "обрабатывать" для этого ему нужна ссылка на _selectedUnit)
     }
 

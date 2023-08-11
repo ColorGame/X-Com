@@ -6,6 +6,7 @@ using UnityEngine.ProBuilder.Shapes;
 
 public class InteractAction : BaseAction // Действие взаимодействия
 {
+    public static event EventHandler OnAnyInteractActionComplete; // Любое взаимодействие завершено
 
     private int _maxInteractDistance = 1; // Дистанция взаимодействия
 
@@ -25,7 +26,7 @@ public class InteractAction : BaseAction // Действие взаимодействия
 
     public override string GetActionName() // Получим имя для кнопки
     {
-        return "Interact";
+        return "взаимодействие";
     }
 
     public override EnemyAIAction GetEnemyAIAction(GridPosition gridPosition) //Получить действие вражеского ИИ  для переданной нам сеточной позиции// Переопределим абстрактный базовый метод //EnemyAIAction создан в каждой Допустимой Сеточнй Позиции, наша задача - настроить каждую ячейку в зависимости от состоянии юнита который там стоит
@@ -83,7 +84,7 @@ public class InteractAction : BaseAction // Действие взаимодействия
     public override void TakeAction(GridPosition gridPosition, Action onActionComplete) // Переопределим TakeAction (Применить Действие (Действовать). (Делегат onActionComplete - по завершении действия). в нашем случае делегату передаем функцию ClearBusy - очистить занятость
     {
         IInteractable interactable = LevelGrid.Instance.GetInteractableAtGridPosition(gridPosition); // Получим IInteractable(интерфейс взаимодействия) из переданной сеточной позиции // НАМ БЕЗ РАЗНИЦЫ КАКОЙ ОБЪЕКТ МЫ ПОЛУЧИМ (дверь, сфера, кнопка...) - лиш бы он реализовал этот интерфейс
-
+        SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.Interact);
         interactable.Interact(OnInteractComplete); //Произведем Взаимодействие с полученной IInteractable(интерфейс взаимодействия) и Передадим делгат - При завершении взаимодействия (этот делегат будет вызывать сама дверь)
 
         ActionStart(onActionComplete); // Вызовим базовую функцию СТАРТ ДЕЙСТВИЯ // Вызываем этот метод в конце после всех настроек т.к. в этом методе есть EVENT и он должен запускаться после всех настроек
@@ -91,6 +92,8 @@ public class InteractAction : BaseAction // Действие взаимодействия
 
     private void OnInteractComplete() //При завершении взаимодействия
     {
+
+        OnAnyInteractActionComplete?.Invoke(this, EventArgs.Empty);
         ActionComplete(); //Действие завершено
         //Что бы мы не смогли открывать и тутже закрывать дверь не дождавшись окончания действия - полного открытия или закрытия
         //Будем вызывать данную функцию через делегат на самой ДВЕРИ когда на ней закончиться таймер

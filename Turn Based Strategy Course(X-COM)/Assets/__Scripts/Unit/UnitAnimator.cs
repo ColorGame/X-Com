@@ -13,6 +13,7 @@ public class UnitAnimator : MonoBehaviour // Анимация юнита(ПЛАНЫ: в дальнейшем 
     [SerializeField] private Transform _rifleTransformHand_R; //в инспекторе закинуть Трансформ Винтовки на ПРАВОЙ РУКЕ
     [SerializeField] private Transform _rifleTransformHand_L; //в инспекторе закинуть Трансформ Винтовки на ЛЕВОЙ РУКЕ
     [SerializeField] private Transform _swordTransform; //в инспекторе закинуть Трансформ Мечя
+    [SerializeField] private Transform _binocularsTransform; //в инспекторе закинуть Трансформ Бинокля
 
     // В дальнейшем сохраним активное оружие и будем его активировать после лечения
     /*private bool _swordActive;
@@ -26,12 +27,10 @@ public class UnitAnimator : MonoBehaviour // Анимация юнита(ПЛАНЫ: в дальнейшем 
             moveAction.OnStopMoving += MoveAction_OnStopMoving; // Подпишемся на событие
             moveAction.OnChangedFloorsStarted += MoveAction_OnChangedFloorsStarted; // Подпишемся на событие
         }
-
         if (TryGetComponent<ShootAction>(out ShootAction shootAction)) // Попробуем получить компонент ShootAction и если получиться сохраним в shootAction
         {
             shootAction.OnShoot += ShootAction_OnShoot; // Подпишемся на событие
         }
-
         if (TryGetComponent<SwordAction>(out SwordAction swordAction)) // Попробуем получить компонент SwordAction и если получиться сохраним в swordAction
         {
             swordAction.OnSwordActionStarted += SwordAction_OnSwordActionStarted; // Подпишемся на событие
@@ -42,26 +41,44 @@ public class UnitAnimator : MonoBehaviour // Анимация юнита(ПЛАНЫ: в дальнейшем 
             healAction.OnHealActionStarted += HealAction_OnHealActionStarted;// Подпишемся на событие
             healAction.OnHealActionCompleted += HealAction_OnHealActionCompleted;
         }
-
         if (TryGetComponent <GrenadeFragmentationAction>(out GrenadeFragmentationAction grenadeFragmentationAction))// Попробуем получить компонент GrenadeAction и если получиться сохраним в grenadeAction
         {
             grenadeFragmentationAction.OnGrenadeActionStarted += GrenadeAction_OnGrenadeActionStarted;// Подпишемся на событие
             grenadeFragmentationAction.OnGrenadeActionCompleted += GrenadeAction_OnGrenadeActionCompleted;         
-        }  
-        
+        }          
         if (TryGetComponent <GrenadeSmokeAction>(out GrenadeSmokeAction grenadeSmokeAction))// Попробуем получить компонент GrenadeAction и если получиться сохраним в grenadeAction
         {
             grenadeSmokeAction.OnGrenadeActionStarted += GrenadeAction_OnGrenadeActionStarted;// Подпишемся на событие
             grenadeSmokeAction.OnGrenadeActionCompleted += GrenadeAction_OnGrenadeActionCompleted;         
         }
-
         if (TryGetComponent<GrenadeStunAction>(out GrenadeStunAction grenadeStunAction))// Попробуем получить компонент GrenadeAction и если получиться сохраним в grenadeAction
         {
             grenadeStunAction.OnGrenadeActionStarted += GrenadeAction_OnGrenadeActionStarted;// Подпишемся на событие
             grenadeStunAction.OnGrenadeActionCompleted += GrenadeAction_OnGrenadeActionCompleted;
         }
+        if (TryGetComponent <SpotterFireAction>(out SpotterFireAction spotterFireAction))
+        {
+            spotterFireAction.OnSpotterFireActionStarted += SpotterFireAction_OnSpotterFireActionStarted;
+            spotterFireAction.OnSpotterFireActionCompleted += SpotterFireAction_OnSpotterFireActionCompleted;
+        }
+
     }
-        
+    private void Start()
+    {
+        EquipRifleHand_R(); // Включим винтовку
+    }
+
+    private void SpotterFireAction_OnSpotterFireActionStarted(object sender, EventArgs e)
+    {
+        EquipBinoculars();
+        _animator.SetBool("IsLooking", true);
+    }
+    private void SpotterFireAction_OnSpotterFireActionCompleted(object sender, EventArgs e)
+    {
+        EquipRifleHand_R(); // Включим винтовку
+        _animator.SetBool("IsLooking", false);
+    }
+
     private void MoveAction_OnChangedFloorsStarted(object sender, MoveAction.OnChangeFloorsStartedEventArgs e)
     {
         if (e.targetGridPosition.floor > e.unitGridPosition.floor) // Если целевая позиция находиться этажом выше то
@@ -74,18 +91,6 @@ public class UnitAnimator : MonoBehaviour // Анимация юнита(ПЛАНЫ: в дальнейшем 
             // Падать
             _animator.SetTrigger("JumpDown");
         }
-
-    }
-
-    private void Start()
-    {
-        EquipRifleHand_R(); // Включим винтовку
-    }
-
-
-    private void GrenadeAction_OnGrenadeActionCompleted(object sender, EventArgs e)
-    {        
-        EquipRifleHand_R(); // Включим винтовку
     }
 
     private void GrenadeAction_OnGrenadeActionStarted(object sender, EventArgs e)
@@ -93,7 +98,16 @@ public class UnitAnimator : MonoBehaviour // Анимация юнита(ПЛАНЫ: в дальнейшем 
         EquipRifleHand_L(); //Установим винтовку на ЛЕВУЮ руку
         _animator.SetTrigger("Grenady");// Установить тригер( нажать спусковой крючок)
     }
+    private void GrenadeAction_OnGrenadeActionCompleted(object sender, EventArgs e)
+    {        
+        EquipRifleHand_R(); // Включим винтовку
+    }
 
+    private void HealAction_OnHealActionStarted(object sender, Unit unit) 
+    {
+        HideAllEquip(); // выключим экипировку
+        _animator.SetTrigger("Heal");// Установить тригер( нажать спусковой крючок)
+    }
     private void HealAction_OnHealActionCompleted(object sender, Unit unit)
     {
         EquipRifleHand_R(); // Включим винтовку
@@ -102,24 +116,16 @@ public class UnitAnimator : MonoBehaviour // Анимация юнита(ПЛАНЫ: в дальнейшем 
         //Instantiate(_healFXPrefab, unit.GetWorldPosition(), Quaternion.LookRotation(Vector3.up)); // Создадим префаб частиц для юнита которого исцеляем (Не забудь в инспекторе включить у частиц Stop Action - Destroy)
     }
 
-    private void HealAction_OnHealActionStarted(object sender, Unit unit) 
-    {
-        HideAllEquip(); // выключим экипировку
-        _animator.SetTrigger("Heal");// Установить тригер( нажать спусковой крючок)
-    }
-
-
-    private void SwordAction_OnSwordActionCompleted(object sender, EventArgs e) // Когда действие завершено поменяем меч на винтовку
-    {
-        EquipRifleHand_R(); // Включим винтовку
-    }
-
     private void SwordAction_OnSwordActionStarted(object sender, EventArgs e)
     {
-        
+
         EquipSword();   // Включим МЕЧ
         _animator.SetTrigger("SwordSlash");// Установить тригер( нажать спусковой крючок)
     }
+    private void SwordAction_OnSwordActionCompleted(object sender, EventArgs e) // Когда действие завершено поменяем меч на винтовку
+    {
+        EquipRifleHand_R(); // Включим винтовку
+    }       
 
     private void MoveAction_OnStartMoving(object sender, EventArgs empty)
     {
@@ -153,11 +159,18 @@ public class UnitAnimator : MonoBehaviour // Анимация юнита(ПЛАНЫ: в дальнейшем 
         _rifleTransformHand_L.gameObject.SetActive(true);
     }
 
+    private void EquipBinoculars()// Экипировка Биноклем
+    {
+        HideAllEquip(); // выключим экипировку
+        _binocularsTransform.gameObject.SetActive(true);
+    }
+
     private void HideAllEquip() // Скрыть всю экипировку
     {
         _swordTransform.gameObject.SetActive(false);
         _rifleTransformHand_R.gameObject.SetActive(false);
         _rifleTransformHand_L.gameObject.SetActive(false);
+        _binocularsTransform.gameObject.SetActive(false);
     }
 
    /* private void SaveStateEquip() // Сохраним активное оружие

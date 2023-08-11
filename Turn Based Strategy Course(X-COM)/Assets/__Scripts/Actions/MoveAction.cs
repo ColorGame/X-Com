@@ -104,6 +104,9 @@ public class MoveAction : BaseAction // Действие перемещения НАСЛЕДУЕТ класс Bas
 
             if (_currentPositionIndex >= _positionList.Count) // Если мы дошли до конца списка тогда...
             {
+                SoundManager.Instance.SetLoop(false);
+                SoundManager.Instance.Stop();
+
                 OnStopMoving?.Invoke(this, EventArgs.Empty); //Запустим событие Прекратил движение
 
                 ActionComplete(); // Вызовим базовую функцию ДЕЙСТВИЕ ЗАВЕРШЕНО
@@ -145,8 +148,11 @@ public class MoveAction : BaseAction // Действие перемещения НАСЛЕДУЕТ класс Bas
 
         List<GridPosition> pathGridPositionList = PathfindingMonkey.Instance.FindPath(_unit.GetGridPosition(), gridPosition, out int pathLength); // Получим список Пути позиций сетки от текущего сеточного положения Юнита до целевого (out int pathLength добавили что бы соответствовала сигнатуре)
 
-        // Надо преобразовать полученный список GridPosition в МИРОВЫЕ КООРДИНАТЫ Vector3
-        _positionList = new List<Vector3>(); // Иниацилизируем список Позиции
+        SoundManager.Instance.SetLoop(true);
+        SoundManager.Instance.Play(SoundManager.Sound.Move);
+
+       // Надо преобразовать полученный список GridPosition в МИРОВЫЕ КООРДИНАТЫ Vector3
+       _positionList = new List<Vector3>(); // Иниацилизируем список Позиции
 
         foreach (GridPosition pathGridPosition in pathGridPositionList) // переберем компоненты списка pathGridPositionList, преобразуем их в мировые координаты и добавим в _positionList
         {
@@ -235,7 +241,7 @@ public class MoveAction : BaseAction // Действие перемещения НАСЛЕДУЕТ класс Bas
 
     public override string GetActionName() // Присвоить базовое действие //целиком переопределим базовую функцию
     {
-        return "Move";
+        return "движение";
     }
 
     public override EnemyAIAction GetEnemyAIAction(GridPosition gridPosition) //Получить действие вражеского ИИ // Переопределим абстрактный базовый метод
@@ -245,7 +251,7 @@ public class MoveAction : BaseAction // Действие перемещения НАСЛЕДУЕТ класс Bas
         return new EnemyAIAction
         {
             gridPosition = gridPosition,
-            actionValue = targetCountAtPosition * 10 +40, //Ячейка с самым большим количеством стреляемых целей будет в ПРИОРИТЕТЕ. Например если у вас есть позиция сетки, в которой нет стреляемых целей, и другая позиция сетки, в которой есть одна стреляемая цель, ИИ перейдет на вторую позицию сетки, поскольку значение действия основано на количестве стреляемых целей.
+            actionValue = targetCountAtPosition * 10 +50, //Ячейка с самым большим количеством стреляемых целей будет в ПРИОРИТЕТЕ. Например если у вас есть позиция сетки, в которой нет стреляемых целей, и другая позиция сетки, в которой есть одна стреляемая цель, ИИ перейдет на вторую позицию сетки, поскольку значение действия основано на количестве стреляемых целей.
         };
         // ВОЗМОЖНЫЕ ВАРИАНТЫ УСЛОЖНЕНИЯ Эта логика может легко учитывать другие факторы… например, если здоровье юнита составляет менее 20%, юнит может пожелать рассмотреть возможность перехода на плитку, на которой НЕТ стреляемых целей.
         // Вы могли бы назначить дополнительный вес плиткам со стреляемыми целями, у которых меньше здоровья, чем плиткам со стреляемыми целями с более высоким здоровьем…

@@ -89,7 +89,7 @@ public class DoorInteract : MonoBehaviour, IInteractable //Дверь-Взаимодействия 
     {
         _onInteractionComplete = onInteractionComplete; // Сохраним полученный делегат
         _isActive = true; // Переключаем Дверь в Активное состояние
-        _timer = 1f; // Задаем время активного состояния  //НУЖНО НАСТРОИТЬ//
+        _timer = 1.5f; // Задаем время активного состояния  //НУЖНО НАСТРОИТЬ//
 
         if (_isInteractable) // Если с дверью можно взаимодействовать то
         {
@@ -105,6 +105,7 @@ public class DoorInteract : MonoBehaviour, IInteractable //Дверь-Взаимодействия 
         else
         {
             // МОЖНО РЕАЛИЗОВАТЬ ЗВУК НЕУДАЧНОГО ОТКРЫВАНИЯ или запустить событие
+            SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.DoorClosed);
             OnAnyDoorIsLocked?.Invoke(this, EventArgs.Empty); // Запустим событие любая дверь заперта (для реализации надписи)
         }
     }
@@ -118,6 +119,7 @@ public class DoorInteract : MonoBehaviour, IInteractable //Дверь-Взаимодействия 
         {
             PathfindingMonkey.Instance.SetIsWalkableGridPosition(gridPosition, true); // Установим что Можно ходить по этой сеточной позиции
         }
+        SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.DoorOpen);
 
         // Запустим события
         OnDoorOpened?.Invoke(this, EventArgs.Empty);
@@ -128,7 +130,7 @@ public class DoorInteract : MonoBehaviour, IInteractable //Дверь-Взаимодействия 
     {
         _isOpen = false;
         _animator.SetBool("IsOpen", _isOpen); // Настроим булевую переменную "IsOpen". Передадим ей значение _isOpen
-
+        SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.DoorClosed);
         foreach (GridPosition gridPosition in _doorGridPositionList) // Переберем список сеточных позиции которые занимает Дверь
         {
             PathfindingMonkey.Instance.SetIsWalkableGridPosition(gridPosition, false); // Установим что Нельзя ходить по этой сеточной позиции

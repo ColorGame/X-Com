@@ -8,10 +8,10 @@ using UnityEngine.UI;
 public class UnitWorldUI : MonoBehaviour // Мировой пользовательский интерфейс юнита //Лежит в canvas на юните
 {
     [SerializeField] private TextMeshProUGUI _actionPointsText; // Закинуть текс UI
-    [SerializeField] private TextMeshProUGUI _hitPercentText; // Закинуть текст здоровья
+    [SerializeField] private TextMeshProUGUI _hitPercentText; // Закинуть процент попадания
     [SerializeField] private TextMeshProUGUI _healthPointsText; // Закинуть текст здоровья
     [SerializeField] private Image _aimImage; // закинуть иконку прицела
-    [SerializeField] private Image _stunImage; // закинуть иконку ОГЛУШЕНИЯ
+    [SerializeField] private Image _stunnedImage; // закинуть иконку ОГЛУШЕНИЯ
     [SerializeField] private Image _healthBarImage; // в инспекторе закинуть шкалу здоровья "Bar"
     [SerializeField] private Unit _unit; // в инспекторе закинуть юнита
     [SerializeField] private HealthSystem _healthSystem; // Закинуть самого юнита тк скрипт висит на нем
@@ -27,6 +27,7 @@ public class UnitWorldUI : MonoBehaviour // Мировой пользовательский интерфейс ю
         UpdateActionPointsText();
         UpdateHealthBar();
         HideHitPercent();
+        UpdateStunnedState();
     }
 
     private void TurnSystem_OnTurnChanged(object sender, EventArgs e)
@@ -73,6 +74,7 @@ public class UnitWorldUI : MonoBehaviour // Мировой пользовательский интерфейс ю
     private void Unit_OnAnyActionPointsChanged(object sender, EventArgs e)
     {
         UpdateActionPointsText();
+        UpdateStunnedState();
     }
 
     /*//  Если вы хотите точно знать, какой юнит претерпел изменения в OnAnyActionPointsChanged, вам просто нужно указать отправителя как Юнита.
@@ -104,8 +106,16 @@ public class UnitWorldUI : MonoBehaviour // Мировой пользовательский интерфейс ю
         _hitPercentText.gameObject.SetActive(false);
         _aimImage.gameObject.SetActive(false);
     }
+
+    private void UpdateStunnedState()
+    {
+        _stunnedImage.gameObject.SetActive(_unit.GetStunned());
+    }
+        
+
     private void OnDestroy()
     {
         UnitActionSystem.Instance.OnSelectedActionChanged -= UnitActionSystem_OnSelectedActionChanged;
+        Unit.OnAnyActionPointsChanged -= Unit_OnAnyActionPointsChanged;
     }
 }

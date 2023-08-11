@@ -115,4 +115,13 @@ public class InputManager : MonoBehaviour // Менеджер ввода // Все манипуляции в
         return zoomAmount;
 #endif
     }
+
+    public bool IsEscButtonDownThisFrame() // Нажата кнопка Esc в этот кадр
+    {
+#if USE_NEW_INPUT_SYSTEM //Если используем Новую Систему Ввода то компилировать код ниже (если закоментировать #define USE_NEW_INPUT_SYSTEM то код ниже не будет компилироваться)
+        return _playerInpytActions.Player.MainMenu.WasPressedThisFrame(); //Был Нажат Этот Кадр возвращает true если на этом кадре была нажата Esc
+#else
+        return Input.GetKeyDown(KeyCode.Escape); // При нажатии лев кнопки мыши вернется true в противном случае false
+#endif        
+    }
 }

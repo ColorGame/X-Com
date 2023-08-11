@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 public class CameraController : MonoBehaviour // В дальнейшем можно сделать рефакторинг и добавить InputSystem
 {
@@ -14,10 +16,11 @@ public class CameraController : MonoBehaviour // В дальнейшем можно сделать рефа
     private const float MAX_FOLLOW_Y_OFFSET = 15f;
 
     [SerializeField] private CinemachineVirtualCamera _cinemachineVirtualCamera;
+    [SerializeField] private Collider cameraBoundsCollider; //Ссылка на коллайдер который ограничивает виртуальную камеру
 
     private CinemachineTransposer _cinemachineTransposer;
-    private Vector3 _targetFollowOffset; // Целевое Смещение следования
-
+    private Vector3 _targetFollowOffset; // Целевое Смещение следования       
+    private bool _edgeScrolling; // прокрутка по краям    
 
     private void Awake()
     {
@@ -29,6 +32,8 @@ public class CameraController : MonoBehaviour // В дальнейшем можно сделать рефа
             return; // т.к. у нас уже есть экземпляр CameraController прекратим выполнение, что бы не выполнить строку ниже
         }
         Instance = this;
+
+        _edgeScrolling = PlayerPrefs.GetInt("edgeScrolling", 1) == 1; // Загрузим сохраненый параметр _edgeScrolling и если это 1 то будет истина если не=1 то будет ложь (из PlayerPrefs.GetInt нельзя тегать булевые параметры поэтому используем строку)
     }
 
     private void Start()
@@ -49,11 +54,44 @@ public class CameraController : MonoBehaviour // В дальнейшем можно сделать рефа
     {
         Vector2 inputMoveDirection = InputManager.Instance.GetCameraMoveVector(); // Направление вводимого движенияи (обнуляем перед каждой трансформащией)
 
+        if (_edgeScrolling) // Если прокрутка по краям активированна то считаем позиции мыши
+        {
+            Vector2 mousePosition = InputManager.Instance.GetMouseScreenPosition(); 
+            float edgeScrollingSize = 0; // (количество пикселей) Отступ от края экрана где начинается движение камеры
+            if (mousePosition.x > Screen.width - edgeScrollingSize) // если мыш больше высоты экран - отступ от края
+            {
+                inputMoveDirection.x = +1f;
+            }
+            if (mousePosition.x < edgeScrollingSize)
+            {
+                inputMoveDirection.x = -1f;
+            }
+            if (mousePosition.y > Screen.height - edgeScrollingSize)
+            {
+                inputMoveDirection.y = +1f;
+            }
+            if (mousePosition.y < edgeScrollingSize)
+            {
+                inputMoveDirection.y = -1f;
+            }
+        }
+
         float moveSpeed = 10f; // Скорость камеры
 
         //Чтобы Движение учитывало вращение преобразуем вектор inputMoveDirection в moveVector
         Vector3 moveVector = transform.forward * inputMoveDirection.y + transform.right * inputMoveDirection.x; // Применим локальное смещение. Локальным вектор forward(z) изменим на inputMoveDirection.y, а Локальным вектор right(x) изменим на inputMoveDirection.x
-        transform.position += moveVector * moveSpeed * Time.deltaTime;
+        Vector3 targetPosition = transform.position + moveVector * moveSpeed * Time.deltaTime; //расчитаем целевую позицию в которую хотим  переместить наш объект
+
+        //ограничим движение
+        targetPosition.x = Mathf.Clamp(targetPosition.x,
+            cameraBoundsCollider.bounds.min.x ,
+            cameraBoundsCollider.bounds.max.x);
+        targetPosition.z = Mathf.Clamp(targetPosition.z,
+            cameraBoundsCollider.bounds.min.z ,
+            cameraBoundsCollider.bounds.max.z );
+
+       // Debug.Log( cameraBoundsCollider.bounds.min);
+       transform.position = targetPosition; // Переместим в расчитаную позицию
     }
 
     private void HandleRotation() // Ручной поворот
@@ -88,5 +126,15 @@ public class CameraController : MonoBehaviour // В дальнейшем можно сделать рефа
         return _targetFollowOffset.y;
     }
 
+    public void SetEdgeScrolling(bool edgeScrolling) // Установить булевое значение для - прокрутки по краям
+    {
+        this._edgeScrolling = edgeScrolling;
+        PlayerPrefs.SetInt("edgeScrolling", edgeScrolling ? 1 : 0); // Сохраним полученное значение в память (если _edgeScrolling истина то установим 1 если ложь установим 0 )
+    }
+
+    public bool GetEdgeScrolling() // Вернуть булевое значение для - прокрутки по краям
+    {
+        return _edgeScrolling;
+    }
 
 }

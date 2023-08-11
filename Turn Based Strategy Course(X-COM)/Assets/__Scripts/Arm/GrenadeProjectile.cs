@@ -19,15 +19,13 @@ public class GrenadeProjectile : MonoBehaviour // Гранатный снаряд
     {
         Fragmentation,  // Осколочная
         Smoke,          // Дымовая
-        Stun,           // Оглушаюшая
-        FlashBang,      // СветоШумовая
-        ElectroMagnetic,// ЭлектроМагнитная (для техники)
+        Stun,           // Оглушаюшая      
     }
 
     private TypeGrenade _typeGrenade; // Тип гранаты
 
     [SerializeField, Min(0.1f)] private float _moveSpeed = 15f; // Скорость перемещения 
-    [SerializeField, Min(0)] private int _damageAmount = 45; // Величина урона
+    [SerializeField, Min(0)] private int _grenadeDamage = 45; // Величина урона
     [SerializeField, Min(0)] private int _damageRadiusInCells = 1; // Радиус повреждения в Ячейках сетки (отсчитывается от центра, если хотим что бы взрыв распростронялся на одну ячейку от центральной то радиус должен = 1,5 (0,5 это половина центральной ячейки halfCentralCell - будем прибавлять отдельно) (если хотим распространить взрыв на 2 ячейки не считая центра то радиус = 2,5 ячейки. Для 3 ячеек радиус 3,5)
     [SerializeField] private AnimationCurve _damageMultiplierAnimationCurve; //Анимацтонная кривая множителя повреждения
 
@@ -127,13 +125,13 @@ public class GrenadeProjectile : MonoBehaviour // Гранатный снаряд
                                                                         // TryGetComponent - возвращает true, если компонент< > найден.Возвращает компонент указанного типа, если он существует.
                 {
                     *//*//1// СПОСОБ УРОН НЕ ЗАВИСИТ ОТ РАССТОЯНИЯ
-                    startUnit.Damage(_damageAmount);
+                    startUnit.Damage(_grenadeDamage);
                     //1//*//*
 
                     //2// СПОСОБ УРОН ЗАВИСИТ ОТ РАССТОЯНИЯ
                     float distanceToUnit = Vector3.Distance(startUnit.GetWorldPosition(), _targetPosition); // Растояние от центра взрыва до юнита который попал в радиус взрыва
                     float distanceToUnitNormalized = distanceToUnit / _damageRadiusInWorldPosition; // Шкалу времени AnimationCurve (горизонтальная ось) заменим на нормализованное растояние до юнита (distanceToUnit<=damageRadius поэтому значение будет от 0 до 1. Если Юнит находиться центре взрыва то distanceToUnit =0 тогда distanceToUnitNormalized тоже = 0, тогда анимационный график вернет значение вертикальной оси в нулевой момент времени это значение будет =1)
-                    int damageAmountFromDistance = Mathf.RoundToInt(_damageAmount * _damageMultiplierAnimationCurve.Evaluate(distanceToUnitNormalized)); //Величина повреждения от растояния. Округлим до целого и переведем в int т.к. Damage() принимает целые числа
+                    int damageAmountFromDistance = Mathf.RoundToInt(_grenadeDamage * _damageMultiplierAnimationCurve.Evaluate(distanceToUnitNormalized)); //Величина повреждения от растояния. Округлим до целого и переведем в int т.к. Damage() принимает целые числа
 
                     startUnit.Damage(damageAmountFromDistance); // применим урон к юниту попавшему в радиус взрыва
                     //2//
@@ -175,7 +173,7 @@ public class GrenadeProjectile : MonoBehaviour // Гранатный снаряд
                         //СПОСОБ УРОН ЗАВИСИТ ОТ РАССТОЯНИЯ
                         float distanceToUnit = Vector3.Distance(targetUnit.GetWorldPosition(), _targetPosition); // Растояние от центра взрыва до юнита который попал в радиус взрыва
                         float distanceToUnitNormalized = distanceToUnit / _damageRadiusInWorldPosition; // Шкалу времени AnimationCurve (горизонтальная ось) заменим на нормализованное растояние до юнита (distanceToUnit<=damageRadius поэтому значение будет от 0 до 1. Если Юнит находиться центре взрыва то distanceToUnit =0 тогда distanceToUnitNormalized тоже = 0, тогда анимационный график вернет значение вертикальной оси в нулевой момент времени это значение будет =1)
-                        int damageAmountFromDistance = Mathf.RoundToInt(_damageAmount * _damageMultiplierAnimationCurve.Evaluate(distanceToUnitNormalized)); //Величина повреждения от растояния. Округлим до целого и переведем в int т.к. Damage() принимает целые числа
+                        int damageAmountFromDistance = Mathf.RoundToInt(_grenadeDamage * _damageMultiplierAnimationCurve.Evaluate(distanceToUnitNormalized)); //Величина повреждения от растояния. Округлим до целого и переведем в int т.к. Damage() принимает целые числа
 
                         targetUnit.Damage(damageAmountFromDistance); // применим урон к юниту попавшему в радиус взрыва                    
                     }
@@ -186,12 +184,16 @@ public class GrenadeProjectile : MonoBehaviour // Гранатный снаряд
                         destructibleCrate.Damage(); // Если есть ящик разрушим его // ЗДЕСЬ МОЖНО РЕАЛИЗОВАТЬ ИНТЕРФЕЙС РАЗРУШЕНИЯ что бы граната могла разрушать все объекты которые реализуют этот интерфейс
                     }
                 }
+
+                SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.GrenadeExplosion);
+
                 Instantiate(_grenadeExplosionFXPrefab, _targetPosition, Quaternion.identity); //Создадим частьички взрыва. 
 
                 break;
 
             case TypeGrenade.Smoke:
 
+                SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.GrenadeSmoke);
                 Instantiate(_grenadeSmokeFXPrefab, _targetPosition, Quaternion.identity); //Создадим Дым в месте взрыва гранаты.
 
                 break;
@@ -214,11 +216,12 @@ public class GrenadeProjectile : MonoBehaviour // Гранатный снаряд
                         }
                         else // Если дальше половины круга то ...
                         {
-                            stunPercent = 0.7f; // 70%
+                            stunPercent = 0.5f; // 50%
                         }
                         targetUnit.Stun(stunPercent); //Оглушим юнита которы попал в радиус действия
                     }
                 }
+                SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.GrenadeStun);
                 Instantiate(_grenadeExplosionFXPrefab, _targetPosition, Quaternion.identity); //Создадим частички взрыва.
                 Instantiate(_electricityWhiteFX, _targetPosition, Quaternion.identity); //Создадим электромагнитное облако.
 

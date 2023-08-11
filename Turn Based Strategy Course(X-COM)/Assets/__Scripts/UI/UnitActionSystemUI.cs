@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI; // Для работы с Пользовательским интерфейсом
 using static UnitActionSystem;
@@ -12,23 +10,27 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
 
     [SerializeField] private Transform _actionButtonPrefab; // В инспекторе закинем префаб Кнопки
     [SerializeField] private Transform _actionButtonContainerTransform; // В инспекторе назначить  Контейнер для кнопок( находиться в сцене в Canvas)
+    [SerializeField] private Transform _friendlyUnitButonPrefab; // В инспекторе закинем префаб Кнопки
+    [SerializeField] private Transform _friendlyUnitButonContainerTransform; // В инспекторе назначить  Контейнер для кнопок( находиться в сцене в Canvas)
     [SerializeField] private TextMeshProUGUI _actionPointsText; // Ссылка на текст очков
+    [SerializeField] private Image _actionPointImage; // Картинка головы
 
     private List<ActionButtonUI> _actionButtonUIList; // Список кнопок действий
-
+    private List<FriendlyUnitButonUI> _friendlyUnitButonUIList; // Список кнопок Юнитов
+    
     private void Awake()
     {
         _actionButtonUIList = new List<ActionButtonUI>(); // Создадим экземпляр списка
+        _friendlyUnitButonUIList = new List<FriendlyUnitButonUI>();
     }
 
     private void Start()
     {
         UnitActionSystem.Instance.OnSelectedUnitChanged += UnitActionSystem_OnSelectedUnitChanged; //Выбранный Юнит Изменен// подписываемся на Event из UnitActionSystem (становимся слушателями). Обозначает что мы выполняем функцию UnitActionSystem_OnSelectedUnitChanged()
-
         UnitActionSystem.Instance.OnSelectedActionChanged += UnitActionSystem_OnSelectedActionChanged; //Выбранное Действие Изменено// подписываемся на Event Будет выполняться каждый раз когда мы меняем Базовое Действие // 
-
         UnitActionSystem.Instance.OnActionStarted += UnitActionSystem_OnActionStarted; // Действие Начато// подписываемся на Event// Будет выполняться каждый раз при старте действия. //
-
+        UnitManager.OnAnyUnitDeadAndRemoveList += UnitManager_OnAnyUnitDeadAndRemoveList;// Событие Любой Юнит Умер И Удален из Списка
+        Unit.OnAnyFriendlyUnitDamage += Unit_OnAnyFriendlyUnitDamage; //Любой дружественный Юнит получил урон
         //2//3//{ Еще несколько способов скрыть кнопки когда занят действием
         UnitActionSystem.Instance.OnBusyChanged += UnitActionSystem_OnBusyChanged; // Занятость Изменена Подписываюсь на Event и выполним UnitActionSystem_OnBusyChanged, эта фунуция получит от события булевый аргумент //
         //2//3//}
@@ -38,8 +40,43 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
         // РЕШЕНИЕ 2 //}             
 
         CreateUnitActionButtons();
+        CreateFriendlyUnitButtons();
         UpdateSelectedVisual();
         UpdateActionPoints();
+    }
+
+    private void TurnSystem_OnTurnChanged(object sender, EventArgs e)
+    {
+        UpdateButtonVisibility();
+    }
+
+    private void Unit_OnAnyFriendlyUnitDamage(object sender, EventArgs e)
+    {
+        foreach (FriendlyUnitButonUI friendlyUnitButonUI in _friendlyUnitButonUIList)
+        {
+            friendlyUnitButonUI.UpdateHealthBar();
+        }
+    }
+
+    private void UpdateButtonVisibility() // Обновление визуализации кнопок в зависимости от того ЧЕЙ ХОД (прятать во время врага)
+    {
+        bool isBusy = !TurnSystem.Instance.IsPlayerTurn(); // Занято когда ходит враг (НЕ Я)
+
+        foreach (ActionButtonUI actionButtonUI in _actionButtonUIList) // В цикле обработаем состояние кнопок
+        {
+            actionButtonUI.HandleStateButton(isBusy);
+        }
+        foreach (FriendlyUnitButonUI friendlyUnitButonUI in _friendlyUnitButonUIList)
+        {
+            friendlyUnitButonUI.HandleStateButton(isBusy);
+        }
+        _actionPointsText.gameObject.SetActive(TurnSystem.Instance.IsPlayerTurn()); // Показываем только во время МОЕГО ХОДА
+        _actionPointImage.gameObject.SetActive(TurnSystem.Instance.IsPlayerTurn());
+    }
+
+    private void UnitManager_OnAnyUnitDeadAndRemoveList(object sender, EventArgs e)
+    {
+        CreateFriendlyUnitButtons();
     }
 
     /*//2//{ Второй способ скрыть кнопки когда занят действием
@@ -85,6 +122,10 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
         {
             actionButtonUI.HandleStateButton(e.isBusy);
         }
+        foreach (FriendlyUnitButonUI friendlyUnitButonUI in _friendlyUnitButonUIList)
+        {
+            friendlyUnitButonUI.HandleStateButton(e.isBusy);
+        }
     } //3//}
 
 
@@ -109,6 +150,24 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
         }
     }
 
+    private void CreateFriendlyUnitButtons() // Создать Кнопки для Дружественныйх Юнитов
+    {
+        foreach (Transform buttonTransform in _friendlyUnitButonContainerTransform) // Очистим контейнер с кнопками
+        {
+            Destroy(buttonTransform.gameObject); // Удалим игровой объект прикрипленный к Transform
+        }
+
+        _friendlyUnitButonUIList.Clear(); // Очистим сисок кнопок
+
+        foreach (Unit unit in UnitManager.Instance.GetFriendlyUnitList())// Переберем дружественных юнитов
+        {
+            Transform actionButtonTransform = Instantiate(_friendlyUnitButonPrefab, _friendlyUnitButonContainerTransform); // Для каждого ЮНИТА создадим префаб кнопки и назначим родителя - Контейнер для кнопок
+            FriendlyUnitButonUI friendlyUnitButonUI = actionButtonTransform.GetComponent<FriendlyUnitButonUI>();// У кнопки найдем компонент FriendlyUnitButonUI
+            friendlyUnitButonUI.SetUnit(unit);//Назвать и Присвоить
+
+            _friendlyUnitButonUIList.Add(friendlyUnitButonUI);// Добавим в список нашу кнопку
+        }
+    }
     private void UnitActionSystem_OnSelectedUnitChanged(object sender, EventArgs empty) //sender - отправитель // Подписка должна иметь туже сигнатуру что и функция отправителя OnSelectedUnitChanged
     {
         CreateUnitActionButtons(); // Создать Кнопки для Действий Юнита 
@@ -131,27 +190,39 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
         {
             actionButtonUI.UpdateSelectedVisual();
         }
+        foreach (FriendlyUnitButonUI friendlyUnitButonUI in _friendlyUnitButonUIList)
+        {
+            friendlyUnitButonUI.UpdateSelectedVisual();
+        }
     }
 
     private void UpdateActionPoints() // Обнавление очков действий (над кнопками действий)
     {
         Unit selectedUnit = UnitActionSystem.Instance.GetSelectedUnit();// Возьмем выбранного юнита
 
-        _actionPointsText.text = "Action Points; " + selectedUnit.GetActionPoints(); //Изменим текст добавив в него количество очков
+        _actionPointsText.text =" "+ selectedUnit.GetActionPoints(); //Изменим текст добавив в него количество очков
     }
 
+    private void UpdateActionPointsFriendlyUnitButon() // Обнавление очков действий 
+    {
+        foreach (FriendlyUnitButonUI friendlyUnitButonUI in _friendlyUnitButonUIList)
+        {
+            friendlyUnitButonUI.UpdateActionPoints();
+        }
+    }
     // ВНИМАНИЕ // Может возникнуть ошибка. Сброс очков в классе Unit и обновление текста очков в этом классе, СЛУШАЮТ одно и тоже событие. Что выполниться позже или раньше неизвестно, текст может обновиться раньше и показывать еще не сброшенные очки действий "0" а по факту их "2".
     // РЕШЕНИЕ 1 //- НАСТРОИМ ПОРЯДОК ВЫПОЛНЕНИЯ СКРИПТА UnitActionSystemUI , добавим в Project Settings/ Script Execution Order и поместим НИЖЕ Deafault Time в конец
-    private void TurnSystem_OnTurnChanged(object sender, EventArgs empty) // Номер хода изменен - это означает что очки действий восстановились, обновим их.
-    {
-        UpdateActionPoints();
+    /* private void TurnSystem_OnTurnChanged(object sender, EventArgs empty) // Номер хода изменен - это означает что очки действий восстановились, обновим их.
+     {
+         UpdateActionPoints();
 
-        // ЗДЕСЬ МОЖНО РЕАЛИЗОВАТЬ ОТКЛЮЧЕНИЕ КНОПОК ВО ВРЕМЯ ХОДА ВРАГА
-    }
+         // ЗДЕСЬ МОЖНО РЕАЛИЗОВАТЬ ОТКЛЮЧЕНИЕ КНОПОК ВО ВРЕМЯ ХОДА ВРАГА
+     }*/
 
     // РЕШЕНИЕ 2 //{
     private void Unit_OnAnyActionPointsChanged(object sender, EventArgs empty) //Произошло изменение очков действий у ЛЮБОГО(Any) юнита а не только у выбранного. обновим их.
     {
         UpdateActionPoints();
+        UpdateActionPointsFriendlyUnitButon();
     }// РЕШЕНИЕ 2 //}
 }
