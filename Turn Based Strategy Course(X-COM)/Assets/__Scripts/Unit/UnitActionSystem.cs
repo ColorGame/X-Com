@@ -17,7 +17,8 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
     public event EventHandler OnSelectedUnitChanged; // Выбранный Юнит Изменен (когда поменяется выбранный юнит мы запустим событие Event)
     public event EventHandler OnSelectedActionChanged; // Выбранное Действие Изменено (когда меняется активное действие в блоке кнопок мы запустим событие Event)
     public event EventHandler OnActionStarted; // Действие Начато ( мы запустим событие Event при старте действия)
-    
+    public event EventHandler OnGameOver; // Конец игры
+
     public event EventHandler<OnUnitSystemEventArgs> OnBusyChanged; // Занятость Изменена (когда меняется значение _isBusy, мы запустим событие Event, и передаем ее в аргументе) в <> -generic этот тип будем вторым аргументом
 
     public class OnUnitSystemEventArgs : EventArgs // Расширим класс событий, чтобы в аргументе события передать нужных юнитов
@@ -78,7 +79,7 @@ public class UnitActionSystem : MonoBehaviour // Система действий юнита (ОБРАБОТ
             }
             else // Если нет никого в живых то КОНЕЦ
             {
-                Debug.Log("GAME OVER");
+                OnGameOver?.Invoke(this, EventArgs.Empty);
             }
         }
     }   

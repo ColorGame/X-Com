@@ -53,13 +53,13 @@ public class MusicManager : MonoBehaviour   // Менеджер Фоновой �
     {
         _musicTimer -= Time.deltaTime; // Запустим таймер для переключения состояний
         
-        if (_musicTimer <= 0) // По истечению времени _musicTimer вызовим NextState() которая в свою очередь переключит состояние. Например - у меня было TypeGrenade.Aiming: тогда в case TypeGrenade.Aiming: переключу на TypeGrenade.Shooting;
+        if (_musicTimer <= 0) // По истечению времени _musicTimer вызовим NextMusic() которая в свою очередь переключит состояние. Например - у меня было TypeGrenade.Aiming: тогда в case TypeGrenade.Aiming: переключу на TypeGrenade.Shooting;
         {
-            NextState(); //Следующая композиция
+            NextMusic(); //Следующая композиция
         }
     }
 
-    private void NextState() //Автомат переключения состояний
+    public void NextMusic() //Автомат переключения состояний
     {
         switch (_music)
         {
@@ -68,10 +68,30 @@ public class MusicManager : MonoBehaviour   // Менеджер Фоновой �
                
                 break;
             case Music.KingArthur58LegendOfTheSword:
+                _music = Music.CaveFight;
                 break;
 
-           
+            case Music.CaveFight:
+                _music = Music.AssassinsBreathe;
+                break;
+
+            case Music.AssassinsBreathe:
+                _music = Music.TheDarklands;
+                break;
+
+            case Music.TheDarklands:
+                _music = Music.KingArthur58DestinyOfTheSword;
+                break;
+
+            case Music.KingArthur58DestinyOfTheSword:
+                _music = Music.GrowingUpLondinium;
+                break;
+
+            case Music.GrowingUpLondinium:
+                _music = Music.SeasonedOak;
+                break;
         }
+        audioSource.Stop();
         _musicTimer = musicAudioClipDictionary[_music].length; // Задаем продолжительность след трека
         PlayMusic(_music); // Воспроизведем полученный трек трек
     }

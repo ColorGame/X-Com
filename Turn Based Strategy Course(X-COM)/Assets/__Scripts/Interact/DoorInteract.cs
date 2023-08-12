@@ -113,7 +113,7 @@ public class DoorInteract : MonoBehaviour, IInteractable //Дверь-Взаимодействия 
     private void OpenDoor() // Открыит дверь
     {
         _isOpen = true;
-        _animator.SetBool("IsOpen", _isOpen); // Настроим булевую переменную "IsOpen". Передадим ей значение _isOpen
+        _animator.SetBool("IsOpen", _isOpen); // Настроим булевую переменную "GetIsOpen". Передадим ей значение _isOpen
 
         foreach (GridPosition gridPosition in _doorGridPositionList) // Переберем список сеточных позиции которые занимает Дверь
         {
@@ -129,8 +129,8 @@ public class DoorInteract : MonoBehaviour, IInteractable //Дверь-Взаимодействия 
     private void CloseDoor() // Закрыть дверь
     {
         _isOpen = false;
-        _animator.SetBool("IsOpen", _isOpen); // Настроим булевую переменную "IsOpen". Передадим ей значение _isOpen
-        SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.DoorClosed);
+        _animator.SetBool("IsOpen", _isOpen); // Настроим булевую переменную "GetIsOpen". Передадим ей значение _isOpen
+        SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.DoorOpen);
         foreach (GridPosition gridPosition in _doorGridPositionList) // Переберем список сеточных позиции которые занимает Дверь
         {
             PathfindingMonkey.Instance.SetIsWalkableGridPosition(gridPosition, false); // Установим что Нельзя ходить по этой сеточной позиции

@@ -76,7 +76,7 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
                 break;
         }
 
-        if (_stateTimer <= 0) // По истечению времени вызовим NextState() которая в свою очередь переключит состояние. Например - у меня было TypeGrenade.Aiming: тогда в case TypeGrenade.Aiming: переключу на TypeGrenade.Shooting;
+        if (_stateTimer <= 0) // По истечению времени вызовим NextMusic() которая в свою очередь переключит состояние. Например - у меня было TypeGrenade.Aiming: тогда в case TypeGrenade.Aiming: переключу на TypeGrenade.Shooting;
         {
             NextState(); //Следующие состояние
         }
