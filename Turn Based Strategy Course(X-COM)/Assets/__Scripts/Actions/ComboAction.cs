@@ -254,7 +254,7 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
 
         GridPosition unitGridPosition = _unit.GetGridPosition(); // Получим позицию в сетке юнита
 
-        int maxComboDistance = GetMaxComboDistance();      
+        int maxComboDistance = GetMaxActionDistance();      
         for (int x = -maxComboDistance; x <= maxComboDistance; x++) // Юнит это центр нашей позиции с координатами unitGridPosition, поэтому переберем допустимые значения в условном радиусе maxComboDistance
         {
             for (int z = -maxComboDistance; z <= maxComboDistance; z++)
@@ -444,7 +444,7 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
         }
     }
 
-    public int GetMaxComboDistance()
+    public override int GetMaxActionDistance()
     {
         int maxComboDistance;
         switch (_state)
@@ -472,5 +472,24 @@ public class ComboAction : BaseAction // Комбо // Действие могут выполнить тольк
     private State SetState(State state)
     {
         return _state = state;
+    }
+
+    private int GetMaxComboEnemyDistance()
+    {
+        return _maxComboEnemyDistance;
+    }
+
+    private int GetSearchEnemyPointCost()
+    {
+        return _searchEnemyPointCost;
+    }    
+
+    public override string GetToolTip()
+    {
+        return "комбо действие нужно 2  юнита" + "\n" +
+            "цена - " + GetSearchEnemyPointCost() + "  списывается сразу у ДВОИХ" + "\n" +            
+            "урон - 0" + "\n" +
+            "2 юнита с расстоянии " + GetMaxComboEnemyDistance() + " клеток, тащат врага к себе" + "\n" +
+           "дополнительный эффект – ШОК у врага";
     }
 }

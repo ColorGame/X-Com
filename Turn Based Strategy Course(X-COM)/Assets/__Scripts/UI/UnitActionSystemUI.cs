@@ -31,6 +31,7 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
         UnitActionSystem.Instance.OnActionStarted += UnitActionSystem_OnActionStarted; // Действие Начато// подписываемся на Event// Будет выполняться каждый раз при старте действия. //
         UnitManager.OnAnyUnitDeadAndRemoveList += UnitManager_OnAnyUnitDeadAndRemoveList;// Событие Любой Юнит Умер И Удален из Списка
         Unit.OnAnyFriendlyUnitDamage += Unit_OnAnyFriendlyUnitDamage; //Любой дружественный Юнит получил урон
+        Unit.OnAnyFriendlyUnitHealing += Unit_OnAnyFriendlyUnitHealing;//Любой дружественный Юнит получил исциление
         //2//3//{ Еще несколько способов скрыть кнопки когда занят действием
         UnitActionSystem.Instance.OnBusyChanged += UnitActionSystem_OnBusyChanged; // Занятость Изменена Подписываюсь на Event и выполним UnitActionSystem_OnBusyChanged, эта фунуция получит от события булевый аргумент //
         //2//3//}
@@ -45,9 +46,17 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
         UpdateActionPoints();
     }
 
+
     private void TurnSystem_OnTurnChanged(object sender, EventArgs e)
     {
         UpdateButtonVisibility();
+    }
+    private void Unit_OnAnyFriendlyUnitHealing(object sender, EventArgs e)
+    {
+        foreach (FriendlyUnitButonUI friendlyUnitButonUI in _friendlyUnitButonUIList)
+        {
+            friendlyUnitButonUI.UpdateHealthBar();
+        }
     }
 
     private void Unit_OnAnyFriendlyUnitDamage(object sender, EventArgs e)
@@ -145,6 +154,16 @@ public class UnitActionSystemUI : MonoBehaviour // Система действий UI юнита // 
             Transform actionButtonTransform = Instantiate(_actionButtonPrefab, _actionButtonContainerTransform); // Для каждого baseAction создадим префаб кнопки и назначим родителя - Контейнер для кнопок
             ActionButtonUI actionButtonUI = actionButtonTransform.GetComponent<ActionButtonUI>(); // У кнопки найдем компонент ActionButtonUI
             actionButtonUI.SetBaseAction(baseAction); //Назвать и Присвоить базовое действие (нашей кнопке)
+
+            MouseEnterExitEvents mouseEnterExitEvents = actionButtonTransform.GetComponent<MouseEnterExitEvents>(); // Найдем на кнопке компонент - События входа и выхода мышью 
+            mouseEnterExitEvents.OnMouseEnter += (object sender, EventArgs e) => // Подпишемся на событие - ПРИ ВХОДЕ мыши на кнопку. Функцию будем объявлять АНАНИМНО через лямбду () => {...} 
+            {
+                TooltipUI.Instance.Show(baseAction.GetToolTip()); // При наведении на кнопку покажем подсказку и передадим текст
+            };
+            mouseEnterExitEvents.OnMouseExit += (object sender, EventArgs e) => // Подпишемся на событие - ПРИ ВЫХОДЕ мыши из кнопки.
+            {
+                TooltipUI.Instance.Hide(); // При отведении мыши скроем подсказку
+            };
 
             _actionButtonUIList.Add(actionButtonUI); // Добавим в список полученный компонент ActionButtonUI
         }

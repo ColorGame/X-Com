@@ -24,7 +24,7 @@ public class MoveAction : BaseAction // Действие перемещения НАСЛЕДУЕТ класс Bas
     }
 
 
-    [SerializeField] private int maxMoveDistance = 5; // Максимальная дистанция движения в сетке
+    private int _maxMoveDistance = 2; // Максимальная дистанция движения в сетке
 
     private List<Vector3> _positionList; // Позиции которые должен преодолеть Юнит (в определенном порядке)
     private int _currentPositionIndex; // Текущая Позиция Индекс
@@ -148,9 +148,6 @@ public class MoveAction : BaseAction // Действие перемещения НАСЛЕДУЕТ класс Bas
 
         List<GridPosition> pathGridPositionList = PathfindingMonkey.Instance.FindPath(_unit.GetGridPosition(), gridPosition, out int pathLength); // Получим список Пути позиций сетки от текущего сеточного положения Юнита до целевого (out int pathLength добавили что бы соответствовала сигнатуре)
 
-        SoundManager.Instance.SetLoop(true);
-        SoundManager.Instance.Play(SoundManager.Sound.Move);
-
        // Надо преобразовать полученный список GridPosition в МИРОВЫЕ КООРДИНАТЫ Vector3
        _positionList = new List<Vector3>(); // Иниацилизируем список Позиции
 
@@ -161,6 +158,8 @@ public class MoveAction : BaseAction // Действие перемещения НАСЛЕДУЕТ класс Bas
 
 #endif
 
+        SoundManager.Instance.SetLoop(true);
+        SoundManager.Instance.Play(SoundManager.Sound.Move);
         _currentPositionIndex = 0; // По умолчанию возвращаем к нулю
         OnStartMoving?.Invoke(this, EventArgs.Empty); // Запустим событие Начал двигаться 
         ActionStart(onActionComplete); // Вызовим базовую функцию СТАРТ ДЕЙСТВИЯ // Вызываем этот метод в конце после всех настроек т.к. в этом методе есть EVENT и он должен запускаться после всех настроек
@@ -171,11 +170,11 @@ public class MoveAction : BaseAction // Действие перемещения НАСЛЕДУЕТ класс Bas
         List<GridPosition> validGridPositionList = new List<GridPosition>();
 
         GridPosition unitGridPosition = _unit.GetGridPosition(); // Получим позицию в сетке
-        for (int x = -maxMoveDistance; x <= maxMoveDistance; x++) // Юнит это центр нашей позиции с координатами unitGridPosition, поэтому переберем допустимые значения в условном радиусе maxMoveDistance
+        for (int x = -_maxMoveDistance; x <= _maxMoveDistance; x++) // Юнит это центр нашей позиции с координатами unitGridPosition, поэтому переберем допустимые значения в условном радиусе _maxMoveDistance
         {
-            for (int z = -maxMoveDistance; z <= maxMoveDistance; z++)
+            for (int z = -_maxMoveDistance; z <= _maxMoveDistance; z++)
             {
-                for (int floor = -maxMoveDistance; floor <= maxMoveDistance; floor++)
+                for (int floor = -_maxMoveDistance; floor <= _maxMoveDistance; floor++)
                 {
 
                     GridPosition offsetGridPosition = new GridPosition(x, z, floor); // Смещенная сеточная позиция. Где началом координат(0,0, floor-этаж) является сам юнит 
@@ -224,7 +223,7 @@ public class MoveAction : BaseAction // Действие перемещения НАСЛЕДУЕТ класс Bas
 #endif
 
                     int pathfindingDistanceMultiplier = 10; // множитель расстояния определения пути (в классе PathfindingMonkey задаем стоимость смещения по клетке и она равна прямо 10 по диогонали 14, поэтому умножем наш множитель на количество клеток)
-                    if (PathfindingMonkey.Instance.GetPathLength(unitGridPosition, testGridPosition) > maxMoveDistance * pathfindingDistanceMultiplier) //Исключим сеточные позиции - Если растояние до тестируемой клетки больше расстояния которое Юнит может преодолеть за один ход
+                    if (PathfindingMonkey.Instance.GetPathLength(unitGridPosition, testGridPosition) > _maxMoveDistance * pathfindingDistanceMultiplier) //Исключим сеточные позиции - Если растояние до тестируемой клетки больше расстояния которое Юнит может преодолеть за один ход
                     {
                         // Длина пути слишком велика
                         continue;
@@ -256,6 +255,19 @@ public class MoveAction : BaseAction // Действие перемещения НАСЛЕДУЕТ класс Bas
         // ВОЗМОЖНЫЕ ВАРИАНТЫ УСЛОЖНЕНИЯ Эта логика может легко учитывать другие факторы… например, если здоровье юнита составляет менее 20%, юнит может пожелать рассмотреть возможность перехода на плитку, на которой НЕТ стреляемых целей.
         // Вы могли бы назначить дополнительный вес плиткам со стреляемыми целями, у которых меньше здоровья, чем плиткам со стреляемыми целями с более высоким здоровьем…
         // Здесь есть много возможностей, помня, конечно, что добавление такой логики может увеличить время, необходимое врагам для расчета наилучших действий.
+    }
+
+    
+
+    public override string GetToolTip()
+    {
+        return "цена - " + GetActionPointCost() + "\n" + 
+            "дальность - " + GetMaxActionDistance();
+    }
+
+    public override int GetMaxActionDistance()
+    {
+        return _maxMoveDistance;
     }
 
     //Враги преследовали моих игроков более агрессивно.

@@ -63,7 +63,7 @@ public class CoverSmokeObject : MonoBehaviour//  Объект Укрытия или Дым
                 break;
 
             case CoverSmokeType.SmokeFull: //Дым Полный
-                _penaltyAccuracy = 0.5f;
+                _penaltyAccuracy = 0.65f;
                 break;
         }
         return _penaltyAccuracy;

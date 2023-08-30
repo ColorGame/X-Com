@@ -195,14 +195,11 @@ public class SpotterFireAction : BaseAction // Действие Корректировщик огня НАСЛ
     {
         return 2;
     }
-    public int GetSpotterFireDistance()
+    public override int GetMaxActionDistance()
     {
         return _maxSpotterFireDistance;
     }
-    public void MultiplySpotterFireDistance(float multiplier)
-    {
-
-    }
+   
     public Transform GetSpotterFireFXPrefab()
     {
         return _spotterFireFXPrefab;
@@ -211,5 +208,14 @@ public class SpotterFireAction : BaseAction // Действие Корректировщик огня НАСЛ
     private void OnDestroy()
     {
         UnitActionSystem.Instance.OnSelectedUnitChanged -= UnitActionSystem_OnSelectedUnitChanged; // Выбранный юнит изменен
+    }
+
+    public override string GetToolTip()
+    {
+        return "комбо действие нужно 2  юнита" + "\n" +
+            "цена - " + GetActionPointCost()+"  списывается у первого юнита" + "\n" +
+            "дальность - " + GetMaxActionDistance() + "\n" +
+        "у напарника увеличивается урон и радиус выстрела на 50%," + "\n" +
+        " и точность становиться 100%)\r\n";
     }
 }

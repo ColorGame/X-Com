@@ -9,7 +9,7 @@ public class OptionsUI : MonoBehaviour // Меню настроик
 
     [SerializeField] private SoundManager _soundManager; // Менеджер ЗВУКА
     [SerializeField] private MusicManager _musicManager; // Менеджер МУЗЫКИ
-    [SerializeField] private Transform _controlMenu; // Меню управления
+    [SerializeField] private ControlMenuUI _controlMenu; // Меню управления
 
     private TextMeshProUGUI _soundVolumeText; // Текст громкости звука
     private TextMeshProUGUI _musicVolumeText; // Текст громкости музыки
@@ -50,7 +50,7 @@ public class OptionsUI : MonoBehaviour // Меню настроик
 
         transform.Find("mainMenuButton").GetComponent<Button>().onClick.AddListener(() =>
         {
-            Time.timeScale = 1f;// установим скорость игры 1 // Когда вызываем мюню настроек время останавливается(Time.timeScale = 0f), с меню настроек можно перейти в главное меню а от туда обратно в игру но пауза так и не отключена. Поэтому при нажатии на кнопку "главное меню" уберем паузу
+           
             GameSceneManager.Load(GameSceneManager.Scene.MainMenuScene);
         });
 
@@ -60,8 +60,7 @@ public class OptionsUI : MonoBehaviour // Меню настроик
         });
 
         transform.Find("resumeButton").GetComponent<Button>().onClick.AddListener(() =>
-        {
-            Time.timeScale = 1f; // выключим паузу
+        {           
             gameObject.SetActive(false); // спрячем меню
         });
 
@@ -90,28 +89,19 @@ public class OptionsUI : MonoBehaviour // Меню настроик
 
     public void ToggleVisible() // Переключатель видимости меню НАСТРОЙКИ (будем вызывать через инспектор кнопкой OptionsButton)
     {
-        gameObject.SetActive(!gameObject.activeSelf); // Переключим в противоположное состояние
-
-        if (gameObject.activeSelf) // Если меню активированно то
-        {
-            Time.timeScale = 0f; // Поставим игру на паузу
-        }
-        else // В противном случае оставим нормальную скорость игры
-        {
-            Time.timeScale = 1f; 
-        }
+        gameObject.SetActive(!gameObject.activeSelf); // Переключим в противоположное состояние        
     }
 
-    private void ToggleVisibleControlMenu()
-    {
-        _controlMenu.gameObject.SetActive(!_controlMenu.gameObject.activeSelf); // Переключим в противоположное состояние
-    }
+    /* private void ToggleVisibleControlMenu()
+     {
+         _controlMenu.gameObject.SetActive(!_controlMenu.gameObject.activeSelf); // Переключим в противоположное состояние
+     }*/
 
 
-   /* public void ToggleVisibleControlMenu()
+    public void ToggleVisibleControlMenu()
     {
         _controlMenu.SetIsOpen(!_controlMenu.GetIsOpen()); // Переключим в противоположное состояние
-        _controlMenu.UpdateStateControlMenu(_controlMenu.GetIsOpen());        
-    }*/
+        _controlMenu.UpdateStateControlMenu(_controlMenu.GetIsOpen());
+    }
 
 }

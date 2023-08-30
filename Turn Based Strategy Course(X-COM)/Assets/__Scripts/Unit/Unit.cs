@@ -13,6 +13,7 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
     public static event EventHandler OnAnyActionPointsChanged;  // static - обозначает что event будет существовать для всего класса не зависимо от того скольго у нас созданно Юнитов. Поэтому для прослушивания этого события слушателю не нужна ссылка на какую-либо конкретную единицу, они могут получить доступ к событию через класс, который затем запускает одно и то же событие для каждой единицы. 
                                                                 // изменении очков действий у ЛЮБОГО(Any) юнита а не только у выбранного.
     public static event EventHandler OnAnyFriendlyUnitDamage; //Любой дружественный Юнит получил урон
+    public static event EventHandler OnAnyFriendlyUnitHealing; //Любой дружественный Юнит получил ИСЦИЛЕНИЕ
     public static event EventHandler OnAnyUnitSpawned; // Событие Любой Рожденный(созданный) Юнит
     public static event EventHandler OnAnyUnitDead; // Событие Любой Мертвый Юнит
 
@@ -175,6 +176,10 @@ public class Unit : MonoBehaviour // Этот клас будет отвечать за позицию на сетк
     public void Healing(int healingAmount) // Исцеление (в аргумент передаем величину восстановившегося здоровья)
     {
         _healthSystem.Healing(healingAmount);
+        if (!_isEnemy)// Если НЕ ВРАГ то
+        {
+            OnAnyFriendlyUnitHealing?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public void Damage(int damageAmount) // Урон (в аргумент передаем величину повреждения)

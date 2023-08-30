@@ -25,7 +25,7 @@ public class HealAction : BaseAction // Действие Лечение НАСЛЕДУЕТ класс BaseAct
     private Unit _targetUnit;// Юнит которого лечим
 
     private int _maxHealDistance = 1; //Максимальная дистанция лечения//НУЖНО НАСТРОИТЬ//
-          
+
 
 
     private void Update()
@@ -69,13 +69,13 @@ public class HealAction : BaseAction // Действие Лечение НАСЛЕДУЕТ класс BaseAct
                 _state = State.HealAfter;
                 float afterHealStateTime = 3f; // Для избежания магических чисель введем переменную  Продолжительность Состояния после лечения //НУЖНО НАСТРОИТЬ// (должно совподать с длительностью анимации, иначе оружие активируется в неподходящий момент)
                 _stateTimer = afterHealStateTime;
-                
+
                 Heal(); // ЛЕЧИМ
-                
+
                 break;
 
             case State.HealAfter:
-               
+
                 OnHealActionCompleted?.Invoke(this, _targetUnit);  // Запустим событие Действие Лечение Закончилочь (подписчик UnitAnimator, где будем ВКЛЮЧАТЬ ОРУЖИЕ)
 
                 ActionComplete(); // Вызовим базовую функцию ДЕЙСТВИЕ ЗАВЕРШЕНО
@@ -184,7 +184,7 @@ public class HealAction : BaseAction // Действие Лечение НАСЛЕДУЕТ класс BaseAct
         return 2;
     }
 
-    public int GetMaxHealDistance()
+    public override int GetMaxActionDistance()
     {
         return _maxHealDistance;
     }
@@ -193,4 +193,19 @@ public class HealAction : BaseAction // Действие Лечение НАСЛЕДУЕТ класс BaseAct
     {
         return _healFXPrefab;
     }
+
+    private int GetHealAmount()
+    {
+        return _healAmount;
+    }
+
+    public override string GetToolTip()
+    {
+        return "цена - " + GetActionPointCost() + "\n" +
+                "дальность - " + GetMaxActionDistance() + "\n" +
+                "восстанавливает " + GetHealAmount()+ " ед. жизни"+"\n" +
+                "лечить можно себя, и любого юнита поблизости";
+    }
+
+
 }

@@ -97,7 +97,7 @@ public class SwordAction : BaseAction // Базовое действие Меч
 
         if (_targetUnit.GetStunned()&& !_unit.GetStunned()) // Если враг оглушенный а я нет
         {
-            int maxDamage = Mathf.RoundToInt( _targetUnit.GetHealthMax()*0.9f); // Отнимим 90% его макс здоровья
+            int maxDamage = Mathf.RoundToInt( _targetUnit.GetHealthMax()*0.8f); // Отнимим 90% его макс здоровья
             _targetUnit.Damage(maxDamage);
         }
         else
@@ -178,7 +178,7 @@ public class SwordAction : BaseAction // Базовое действие Меч
         return 2;
     }
 
-    public int GetMaxSwordDistance()
+    public override int GetMaxActionDistance()
     {
         return _maxSwordDistance;
     }
@@ -186,6 +186,20 @@ public class SwordAction : BaseAction // Базовое действие Меч
     public Unit GetTargetUnit() // Раскроем _unitPartner
     {
         return _targetUnit;
+    }
+    private int GetSwordDamage()
+    {
+        return _swordDamage;
+    }
+    
+
+    public override string GetToolTip()
+    {
+        return "цена - " + GetActionPointCost() + "\n" +
+                "дальность - " + GetMaxActionDistance() + "\n" +
+                "урон - " + GetSwordDamage() + "\n" +
+                "эффект комбо" + "\n" +
+                "у врага в ШОКОВОМ состоянии отнимается 80%  его макс здоровья";
     }
 
 }

@@ -19,20 +19,20 @@ public class EnemyUnitSystemUI : MonoBehaviour
     private void Start()
     {
         UnitManager.OnAnyUnitDeadAndRemoveList += UnitManager_OnAnyUnitDeadAndRemoveList;// Событие Любой Юнит Умер И Удален из Списка
-      //  LevelScripting.OnAnyEnemyUnitActive += LevelScripting_OnAnyEnemyUnitActive;  // НЕ РАБОТАЕТ
+        UnitManager.OnAnyEnemyUnitSpawnedAndAddList += UnitManager_OnAnyEnemyUnitSpawnedAndAddList;// Любой вражеский юнит ражден и добавлен в Списка
         InteractAction.OnAnyInteractActionComplete += InteractAction_OnAnyInteractActionComplete;
         CreateEnemyUnitButtons(); // Создать Кнопки для  Юнитов
+    }
+
+    private void UnitManager_OnAnyEnemyUnitSpawnedAndAddList(object sender, EventArgs e)
+    {
+        CreateEnemyUnitButtons();
     }
 
     private void InteractAction_OnAnyInteractActionComplete(object sender, EventArgs e)
     {
         CreateEnemyUnitButtons(); // Создать Кнопки для  Юнитов
-    }
-
-   /* private void LevelScripting_OnAnyEnemyUnitActive(object sender, EventArgs e)
-    {
-        CreateEnemyUnitButtons();
-    }*/
+    }   
 
     private void UnitManager_OnAnyUnitDeadAndRemoveList(object sender, EventArgs e)
     {

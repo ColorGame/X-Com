@@ -14,7 +14,7 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
         GrenadeInstantiate, //Создание гранаты
         GrenadeAfter,  //После Бросока Гранаты
     }
-
+    
     [SerializeField] protected LayerMask _obstaclesDoorMousePlaneLayerMask; //маска слоя препятствия и двери (появится в ИНСПЕКТОРЕ) НАДО ВЫБРАТЬ Obstacles и DoorInteract MousePlane(пол для нескольких этажей) и // ВАЖНО НА ВСЕХ СТЕНАХ В ИГРЕ УСТАНОВИТЬ МАСКУ СЛОЕВ -Obstacles, а на дверях -DoorInteract
     [SerializeField] protected Transform _grenadeProjectilePrefab; // Префаб Снаряд Гранаты // В префабе юнита закинуть префаб гранаты
     [SerializeField] protected Transform _grenadeSpawnTransform; // Трансформ создания гранаты // В префабе юнита закинуть префаб гранаты
@@ -42,7 +42,7 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
     }
 
     public abstract void _handleAnimationEvents_OnAnimationTossGrenadeEventStarted(object sender, EventArgs e); // abstract - вынуждает реализовывать в каждом подклассе и в базовом должно иметь пустое тело.
-
+    public abstract int GetGrenadeDamage(); // повреждения от гранаты
     protected void Update()
     {
         if (!_isActive) // Если не активны то ...
@@ -196,10 +196,13 @@ public abstract class GrenadeAction : BaseAction // Граната ДЕйствие. Наследует 
         ActionComplete(); // эта функция выполняет - Очистить занятость или стать свободным - активировать кнопки UI
     }
 
-    public int GetMaxThrowDistance()//Раскроем 
+    public override int GetMaxActionDistance()//Раскроем 
     {
         return _maxThrowDistance;
-    }
+    }       
+   
+
+
 
     public float GetDamageRadiusInWorldPosition() => _grenadeProjectile.GetDamageRadiusInWorldPosition(); // Сквозная функция
     public int GetDamageRadiusInCells() => _grenadeProjectile.GetDamageRadiusInCells(); // Сквозная функция

@@ -7,7 +7,7 @@ public class SpinAction : BaseAction // Вращение
 {
 
     private float _totalSpinAmount; // Общая сумма вращения
-
+    private int _maxSpinDistance = 1; //Максимальная дистанция
 
     private void Update()
     {
@@ -71,5 +71,16 @@ public class SpinAction : BaseAction // Вращение
             gridPosition = gridPosition,
             actionValue = 0, //Поставим низкое значение действия. Будет выполнять вращение если ничего другого сделать не может, 
         };
+    }
+
+    public override string GetToolTip()
+    {
+        return "цена - " + GetActionPointCost() + "\n" +
+                "дальность - " + GetMaxActionDistance();
+    }
+
+    public override int GetMaxActionDistance()
+    {
+       return _maxSpinDistance;
     }
 }

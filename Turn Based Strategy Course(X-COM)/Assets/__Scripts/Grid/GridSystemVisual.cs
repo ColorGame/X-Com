@@ -294,12 +294,12 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
 
             case HealAction healAction: // Во время ЛЕЧЕНИЯ -ЗЕЛЕНЫЙ
                 gridVisualType = GridVisualType.Green;
-                ShowGridPositionRange(selectedUnit.GetGridPosition(), healAction.GetMaxHealDistance(), GridVisualType.GreenSoft, false); // Покажем диапазон 
+                ShowGridPositionRange(selectedUnit.GetGridPosition(), healAction.GetMaxActionDistance(), GridVisualType.GreenSoft, false); // Покажем диапазон 
                 break;
 
             case ShootAction shootAction: // Во время СТРЕЛЬБЫ -КРАСНЫЙ
                 gridVisualType = GridVisualType.Red;
-                ShowGridPositionRange(selectedUnit.GetGridPosition(), shootAction.GetMaxShootDistance(), GridVisualType.RedSoft, true); // Покажем диапазон стрельбы РОМБ-true
+                ShowGridPositionRange(selectedUnit.GetGridPosition(), shootAction.GetMaxActionDistance(), GridVisualType.RedSoft, true); // Покажем диапазон стрельбы РОМБ-true
                 break;
 
             case GrenadeAction grenadeAction:// Во время кидания ГРАНАТЫ -ЖЕЛТЫЙ
@@ -309,12 +309,12 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
 
             case SwordAction swordAction: // Во время удара МЕЧОМ -красный
                 gridVisualType = GridVisualType.Red;
-                ShowGridPositionRange(selectedUnit.GetGridPosition(), swordAction.GetMaxSwordDistance(), GridVisualType.RedSoft, false); // Покажем диапазон удара
+                ShowGridPositionRange(selectedUnit.GetGridPosition(), swordAction.GetMaxActionDistance(), GridVisualType.RedSoft, false); // Покажем диапазон удара
                 break;
 
             case InteractAction interactAction: // Во время ВЗАИМОДЕЙСТВИЯ -ГОЛУБОЙ
                 gridVisualType = GridVisualType.Blue;
-                ShowGridPositionRange(selectedUnit.GetGridPosition(), interactAction.GetMaxInteractDistance(), GridVisualType.BlueSoft, false); // Покажем диапазон 
+                ShowGridPositionRange(selectedUnit.GetGridPosition(), interactAction.GetMaxActionDistance(), GridVisualType.BlueSoft, false); // Покажем диапазон 
                 break;
 
             case ComboAction comboAction: // Во время Выбора комбо союзника -ЗЕЛЕНЫЙ    
@@ -325,12 +325,12 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
                     default:
                     case ComboAction.State.ComboSearchPartner: // Если ищем Партнера для комбо
                         gridVisualType = GridVisualType.Green;
-                        ShowGridPositionRange(selectedUnit.GetGridPosition(), comboAction.GetMaxComboDistance(), GridVisualType.GreenSoft, false); // Покажем диапазон 
+                        ShowGridPositionRange(selectedUnit.GetGridPosition(), comboAction.GetMaxActionDistance(), GridVisualType.GreenSoft, false); // Покажем диапазон 
                         break;
 
                     case ComboAction.State.ComboSearchEnemy: // Если Ищем врага то
                         gridVisualType = GridVisualType.Red;
-                        ShowGridPositionRange(selectedUnit.GetGridPosition(), comboAction.GetMaxComboDistance(), GridVisualType.RedSoft, true); // Покажем диапазон  РОМБ-true
+                        ShowGridPositionRange(selectedUnit.GetGridPosition(), comboAction.GetMaxActionDistance(), GridVisualType.RedSoft, true); // Покажем диапазон  РОМБ-true
                         break;
 
                     case ComboAction.State.ComboStart: // Ячейки куда надо перетащить
@@ -343,7 +343,7 @@ public class GridSystemVisual : MonoBehaviour //Сеточная система визуализации  В
 
             case SpotterFireAction spotterFireAction: // Корректировка огня -ЗЕЛЕННЫЙЙ
                 gridVisualType = GridVisualType.Green;
-                ShowGridPositionRange(selectedUnit.GetGridPosition(), spotterFireAction.GetSpotterFireDistance(), GridVisualType.GreenSoft, false); // Покажем диапазон 
+                ShowGridPositionRange(selectedUnit.GetGridPosition(), spotterFireAction.GetMaxActionDistance(), GridVisualType.GreenSoft, false); // Покажем диапазон 
                 break;
         }
 

@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.ProBuilder.Shapes;
 using static GrenadeProjectile;
 using static UnityEngine.ParticleSystem;
-using static UnityEngine.Rendering.VirtualTexturing.Debugging;
 
 // В префабе гранаты у TRAIL незабудь поставить галочку Autodestruct
 public class GrenadeProjectile : MonoBehaviour // Гранатный снаряд
@@ -25,16 +24,15 @@ public class GrenadeProjectile : MonoBehaviour // Гранатный снаряд
     private TypeGrenade _typeGrenade; // Тип гранаты
 
     [SerializeField, Min(0.1f)] private float _moveSpeed = 15f; // Скорость перемещения 
-    [SerializeField, Min(0)] private int _grenadeDamage = 45; // Величина урона
     [SerializeField, Min(0)] private int _damageRadiusInCells = 1; // Радиус повреждения в Ячейках сетки (отсчитывается от центра, если хотим что бы взрыв распростронялся на одну ячейку от центральной то радиус должен = 1,5 (0,5 это половина центральной ячейки halfCentralCell - будем прибавлять отдельно) (если хотим распространить взрыв на 2 ячейки не считая центра то радиус = 2,5 ячейки. Для 3 ячеек радиус 3,5)
     [SerializeField] private AnimationCurve _damageMultiplierAnimationCurve; //Анимацтонная кривая множителя повреждения
-
     [SerializeField] private Transform _grenadeExplosionFXPrefab; // в инспекторе закинуть систему частиц (искры от гранаты) //НЕЗАБУДЬ ПОСТАВИТЬ ГАЛОЧКУ У TRAIL самоуничтожение(Destroy) после проигрывания
     [SerializeField] private Transform _grenadeSmokeFXPrefab; // в инспекторе закинуть систему частиц (ДЫМ от гранаты) // Уничтожать дым будет скрипт прикрипленный к нему
     [SerializeField] private Transform _electricityWhiteFX; // в инспекторе закинуть систему частиц (Разряды электричества)
     [SerializeField] private TrailRenderer _trailRenderer; // в инспекторе закинуть трэил гранаты он лежит в самой пули // у TRAIL незабудь поставить галочку Autodestruct
     [SerializeField] private AnimationCurve _arcYAnimationCurve; // Анимацтонная кривая для настройки дуги полета гранаты
 
+    private int _grenadeDamage; // Величина урона
     private Vector3 _targetPosition;//Позиция цели
     private float _totalDistance;   //Вся дистанция. Дистанция до цели (между гранатой и целью). Для оптимизации вычислим один раз, а в Update() для вычисления текущего растояния до цели будем отнимать от _totalDistance проиденый за кадр шаг moveStep (Vector3.Distance-затратный метод)
     private float _floorHeight; // Высота этажа
@@ -231,8 +229,9 @@ public class GrenadeProjectile : MonoBehaviour // Гранатный снаряд
 
     }
 
-    public void Setup(GridPosition targetGridPosition, TypeGrenade typeGrenade, Action onGrenadeBehaviorComplete) // Настройка гранаты. В аргумент передаем целевую позицию, тип гранаты и также  В аргумент будем передовать делегат типа Action (onGrenadeBehaviorComplete - На Гранате Действие ЗАвершено)
+    public void Setup(GridPosition targetGridPosition, TypeGrenade typeGrenade, Action onGrenadeBehaviorComplete, int grenadeDamage) // Настройка гранаты. В аргумент передаем целевую позицию, тип гранаты и также  В аргумент будем передовать делегат типа Action (onGrenadeBehaviorComplete - На Гранате Действие ЗАвершено)
     {
+        _grenadeDamage = grenadeDamage;
         _typeGrenade = typeGrenade;
         _onGrenadeBehaviorComplete = onGrenadeBehaviorComplete; // Сохраним полученый делегат
         _targetPosition = LevelGrid.Instance.GetWorldPosition(targetGridPosition); // Получим целевую позицию из переданной нам позиции сетки        

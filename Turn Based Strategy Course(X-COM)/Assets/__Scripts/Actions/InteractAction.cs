@@ -9,7 +9,7 @@ public class InteractAction : BaseAction // Действие взаимодействия
     public static event EventHandler OnAnyInteractActionComplete; // Любое взаимодействие завершено
 
     private int _maxInteractDistance = 1; // Дистанция взаимодействия
-
+    private GridPosition _targetGridPosition;
 
     private void Update()
     {
@@ -17,7 +17,12 @@ public class InteractAction : BaseAction // Действие взаимодействия
         {
             return; // выходим и игнорируем код ниже
         }
-        
+
+        Vector3 targetDirection = (LevelGrid.Instance.GetWorldPosition(_targetGridPosition) - transform.position).normalized; // Направление к целивой позиции, еденичный вектор
+        float rotateSpeed = 10f; //НУЖНО НАСТРОИТЬ//
+
+        transform.forward = Vector3.Slerp(transform.forward, targetDirection, Time.deltaTime * rotateSpeed); // поворт юнита.
+
         //Что бы мы не смогли открывать и тутже закрывать дверь не дождавшись окончания действия - полного открытия или закрытия
         //Будем вызывать данную функцию через делегат на самой ДВЕРИ когда на ней закончиться таймер
         //ActionComplete(); //Действие завершено
@@ -86,7 +91,7 @@ public class InteractAction : BaseAction // Действие взаимодействия
         IInteractable interactable = LevelGrid.Instance.GetInteractableAtGridPosition(gridPosition); // Получим IInteractable(интерфейс взаимодействия) из переданной сеточной позиции // НАМ БЕЗ РАЗНИЦЫ КАКОЙ ОБЪЕКТ МЫ ПОЛУЧИМ (дверь, сфера, кнопка...) - лиш бы он реализовал этот интерфейс
         SoundManager.Instance.PlaySoundOneShot(SoundManager.Sound.Interact);
         interactable.Interact(OnInteractComplete); //Произведем Взаимодействие с полученной IInteractable(интерфейс взаимодействия) и Передадим делгат - При завершении взаимодействия (этот делегат будет вызывать сама дверь)
-
+        _targetGridPosition = gridPosition;
         ActionStart(onActionComplete); // Вызовим базовую функцию СТАРТ ДЕЙСТВИЯ // Вызываем этот метод в конце после всех настроек т.к. в этом методе есть EVENT и он должен запускаться после всех настроек
     }
 
@@ -100,9 +105,16 @@ public class InteractAction : BaseAction // Действие взаимодействия
         
     }
 
-    public int GetMaxInteractDistance()
+    public override int GetMaxActionDistance()
     {
         return _maxInteractDistance;
+    }
+
+    public override string GetToolTip()
+    {
+        return "цена - " + GetActionPointCost() + "\n" +
+                "дальность - " + GetMaxActionDistance() + "\n" +
+                "можно открывать двери, и <color=#00ff00> ЗЕЛЕНЫЕ БОЧКИ</color>  ";
     }
 }
 

@@ -89,13 +89,13 @@ public class DoorInteract : MonoBehaviour, IInteractable //Дверь-Взаимодействия 
     {
         _onInteractionComplete = onInteractionComplete; // Сохраним полученный делегат
         _isActive = true; // Переключаем Дверь в Активное состояние
-        _timer = 1.5f; // Задаем время активного состояния  //НУЖНО НАСТРОИТЬ//
+        _timer = 2f; // Задаем время активного состояния  //НУЖНО НАСТРОИТЬ//
 
         if (_isInteractable) // Если с дверью можно взаимодействовать то
         {
             if (_isOpen) // При взаимодействии, если дверь открыта будем ее закрывать и наоборот
             {
-                CloseDoor();
+                //CloseDoor();
             }
             else
             {

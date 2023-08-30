@@ -37,8 +37,8 @@ public class ShootAction : BaseAction
     [SerializeField] private Transform _shootPointTransform; // в инспекторе закинуть точку выстрела лежит на автомате
     [SerializeField] private Transform _aimPointTransform; // в инспекторе закинуть точку прицеливания лежит на голове (нужна если враг присел или это маленький персонаж)
 
-    private int _maxShootDistance = 6;
-    private int _shootDamage = 5; // Величина уронв
+    private int _maxShootDistance = 7;
+    private int _shootDamage = 6; // Величина уронв
     private State _state; // Состояние юнита
     private float _stateTimer; //Таймер состояния
     private Unit _targetUnit; // Юнит в которого стреляем целимся
@@ -176,7 +176,7 @@ public class ShootAction : BaseAction
         if (_hit) // Если попали то
         {
             bulletProjectile.Setup(targetUnitAimPointPosition, _hit); // В аргумент предали позицию Прицеливания целевого юнита
-            _targetUnit.Damage(_shootDamage); // ДЛЯ ТЕСТА УЩЕРБ БУДЕТ 5. В дальнейшем будем брать этот показатель из оружия //НАДО НАСТРОИТЬ//
+            _targetUnit.Damage(GetShootDamage()); // ДЛЯ ТЕСТА УЩЕРБ БУДЕТ 5. В дальнейшем будем брать этот показатель из оружия //НАДО НАСТРОИТЬ//
         }
         else // Если промах
         {
@@ -192,6 +192,7 @@ public class ShootAction : BaseAction
 
         if (_haveSpotterFire) // Если есть корректировщик то ПОМЕХ НЕТУ
         {
+
             return _hitPercent;
         }
         // ПРОВЕРИМ ВСЕ CoverSmokeObject НА ПУТИ ВЫСТРЕЛА
@@ -283,7 +284,7 @@ public class ShootAction : BaseAction
     {
         List<GridPosition> validGridPositionList = new List<GridPosition>();
 
-        int maxShootDistance = GetMaxShootDistance();
+        int maxShootDistance = GetMaxActionDistance();
         for (int x = -maxShootDistance; x <= maxShootDistance; x++) // Юнит это центр нашей позиции с координатами unitGridPosition, поэтому переберем допустимые значения в условном радиусе maxShootDistance
         {
             for (int z = -maxShootDistance; z <= maxShootDistance; z++)
@@ -379,6 +380,7 @@ public class ShootAction : BaseAction
     {
         _spotterFireUnit = spotterFireUnit;
         _haveSpotterFire = true;
+
     }
 
     public void СlearSpotterFireUnit()// Очистить поле корректировщика огня
@@ -403,7 +405,7 @@ public class ShootAction : BaseAction
     {
         return _targetUnit;
     }
-    public int GetMaxShootDistance() // Раскроем maxShootDistance
+    public override int GetMaxActionDistance() // Раскроем maxShootDistance
     {        
         if (_haveSpotterFire)
         {            
@@ -416,4 +418,25 @@ public class ShootAction : BaseAction
         }
 
     }
+    private int GetShootDamage()
+    {
+        if (_haveSpotterFire)
+        {
+            float percentageShootDamageIncrease = 0.5f;// Процент увеличения ehjyf выстрела //НУЖНО НАСТРОИТЬ//
+            return _shootDamage + Mathf.RoundToInt(_shootDamage * percentageShootDamageIncrease);
+        }
+        else
+        {
+            return _shootDamage;
+        }
+    }
+
+    public override string GetToolTip()
+    {
+        return "цена - " + GetActionPointCost() + " (за 3 выстрела очередью)" + "\n" +
+            "дальность - " + GetMaxActionDistance() + "\n" +
+            "урон - " + GetShootDamage() + "\n" +
+            "препятствия и дым дают штраф точности" + "\n" +
+           "наводчик увеличивает дальность на  50%";
+    }    
 }

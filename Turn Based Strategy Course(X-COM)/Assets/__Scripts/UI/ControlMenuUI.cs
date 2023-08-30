@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class ControlMenuUI : MonoBehaviour
 {
-   /* private Animator _animator; //Аниматор на двери
+    private Animator _animator; //
     private bool _isOpen = false; //
 
 
@@ -14,8 +14,11 @@ public class ControlMenuUI : MonoBehaviour
         _animator = GetComponent<Animator>();
     }
 
+    private void Start()
+    {
+        UpdateStateControlMenu(_isOpen);
+    }
 
-    
     public void UpdateStateControlMenu(bool isOpen)
     {
         if (isOpen)
@@ -30,11 +33,13 @@ public class ControlMenuUI : MonoBehaviour
 
     public void OpenControlMenu()
     {
+        _isOpen= true;
         _animator.SetBool("IsOpen", _isOpen); // Настроим булевую переменную "GetIsOpen". Передадим ей значение _isOpen
     }
 
     public void CloseControlMenu()
     {
+        _isOpen= false;
         _animator.SetBool("IsOpen", _isOpen); // Настроим булевую переменную "GetIsOpen". Передадим ей значение _isOpen
     }
 
@@ -46,5 +51,5 @@ public class ControlMenuUI : MonoBehaviour
     public void SetIsOpen(bool isOpen)
     {
         _isOpen = isOpen;
-    }*/
+    }
 }

@@ -40,7 +40,7 @@ public class LevelScripting : MonoBehaviour // Уровень. Отвечает за взаимодейств
     [Header("DOOR")]
     // Двери
     
-    [SerializeField] private DoorInteract _door1;
+    [SerializeField] private DoorInteract _doorSphere1;
     [SerializeField] private DoorInteract _door2;
     [SerializeField] private DoorInteract _door3;
     [SerializeField] private DoorInteract _door4;
@@ -50,6 +50,7 @@ public class LevelScripting : MonoBehaviour // Уровень. Отвечает за взаимодейств
 
     [Header("SPHERE")]
     // Сфера взаимодействия будут открывать определенные двери
+    [SerializeField] private SphereInteract _sphere1;
     [SerializeField] private SphereInteract _sphere5; 
     [SerializeField] private SphereInteract _sphere6;
     [SerializeField] private SphereInteract _sphere7;
@@ -57,6 +58,7 @@ public class LevelScripting : MonoBehaviour // Уровень. Отвечает за взаимодейств
     [Header("BARREL")]
     // Бочка взаимодействия будет скрывать одну сферу взаимодействия
     [SerializeField] private BarrelInteract _barrelSphere7;
+    [SerializeField] private BarrelInteract _barrelSphere1;
 
 
    /* private List<List<GameObject>> _hiderListList;
@@ -95,9 +97,9 @@ public class LevelScripting : MonoBehaviour // Уровень. Отвечает за взаимодейств
         _doorSphere5.SetIsInteractable(false);
         _doorSphere6.SetIsInteractable(false);
         _doorSphere7.SetIsInteractable(false);
-                
 
-        _door1.OnDoorOpened += (object sender, EventArgs e) => // Подпишемся на событие Дверь открыта. Функцию будем объявлять АНАНИМНО через лямбду () => {...} 
+
+        _doorSphere1.OnDoorOpened += (object sender, EventArgs e) => // Подпишемся на событие Дверь открыта. Функцию будем объявлять АНАНИМНО через лямбду () => {...} 
         {   
             // ЭКСПЕРЕМЕНТ РЕФАКТОРИНГ
             /*DoorInteract doorInteract = (DoorInteract)sender;
@@ -145,7 +147,11 @@ public class LevelScripting : MonoBehaviour // Уровень. Отвечает за взаимодейств
             SetActiveGameObjectList(_enemy7List, true);
         };
 
-
+        _barrelSphere1.OnBarrelInteractlActivated += (object sender, EventArgs e) =>// Подпишемся на событие Бочка Активированна.   
+        {
+            _sphere1.gameObject.SetActive(true); // При активации бочки сделаем Сферу взаимодействия АКТИВНОЙ
+            _sphere1.UpdateInteractableAtGridPosition(); // Обновить у Сферы, Взаимодействие с Сеточной позицией
+        };
 
         _barrelSphere7.OnBarrelInteractlActivated += (object sender, EventArgs e) =>// Подпишемся на событие Бочка Активированна.   
         {
@@ -153,6 +159,10 @@ public class LevelScripting : MonoBehaviour // Уровень. Отвечает за взаимодейств
             _sphere7.UpdateInteractableAtGridPosition(); // Обновить у Сферы, Взаимодействие с Сеточной позицией
         };
 
+        _sphere1.OnInteractSphereActivated += (object sender, EventArgs e) => // Подпишемся на событие Сфера Активированна.
+        {
+            InteractSphereAndDoor(_doorSphere1);
+        };
 
 
         _sphere5.OnInteractSphereActivated += (object sender, EventArgs e) => // Подпишемся на событие Сфера Активированна.

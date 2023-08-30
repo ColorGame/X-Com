@@ -57,7 +57,7 @@ public class CameraController : MonoBehaviour // В дальнейшем можно сделать рефа
         if (_edgeScrolling) // Если прокрутка по краям активированна то считаем позиции мыши
         {
             Vector2 mousePosition = InputManager.Instance.GetMouseScreenPosition(); 
-            float edgeScrollingSize = 0; // (количество пикселей) Отступ от края экрана где начинается движение камеры
+            float edgeScrollingSize = 20; // (количество пикселей) Отступ от края экрана где начинается движение камеры
             if (mousePosition.x > Screen.width - edgeScrollingSize) // если мыш больше высоты экран - отступ от края
             {
                 inputMoveDirection.x = +1f;

@@ -29,6 +29,9 @@ public abstract class BaseAction : MonoBehaviour    //Базовое Действие Этот клас
 
     public abstract string GetActionName(); // Вернуть имя действия // abstract - вынуждает реализовывать в каждом подклассе и в базовом должно иметь пустое тело.
 
+    public abstract string GetToolTip(); // Вернкть всплывающую подсказку
+
+    public abstract int GetMaxActionDistance(); // Вернуть Дистанцию действия
     public abstract void TakeAction(GridPosition gridPosition, Action onActionComplete); //Generic Применить Действие (Действовать) В аргумент передаем сеточную позицию под курсором и делегат onActionComplete (При Завершении Действия, в нашем случае это ClearBusy() // Очистить занятость или стать свободным - активировать кнопки UI ) 
 
     public abstract List<GridPosition> GetValidActionGridPositionList(); //Получить Список Допустимых Сеточных Позиция для Действий

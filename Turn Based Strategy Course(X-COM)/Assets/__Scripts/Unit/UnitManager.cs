@@ -13,10 +13,14 @@ public class UnitManager : MonoBehaviour // Менеджер (администратор) Юнитов
                                                                // instance - экземпляр, У нас будет один экземпляр UnitActionSystem можно сдел его static. Instance нужен для того чтобы другие методы, через него, могли подписаться на Event.
 
     public static event EventHandler OnAnyUnitDeadAndRemoveList; // Событие Любой Юнит Умер И Удален из Списка
+    public static event EventHandler OnAnyEnemyUnitSpawnedAndAddList; // Событие Любой вражеский юнит ражден и добавлен в Списка
+
+   [SerializeField] private List<Unit> _enemyUnitFullList;  // Полный список Вражеских юнитов В ИНСПЕКТОРЕ ЗАКИНУТЬ ВСЕХ ВРАЖЕСКИХ ЮНИТОВ
 
     private List<Unit> _unitList;       // Список юнитов (ОБЩИЙ)
     private List<Unit> _friendlyUnitList;// Дружественный список юнитов
     private List<Unit> _enemyUnitList;  // Вражеский список юнитов
+
 
 
     private void Awake()
@@ -53,6 +57,7 @@ public class UnitManager : MonoBehaviour // Менеджер (администратор) Юнитов
         if (unit.IsEnemy()) // Если отправитель Враг то ...
         {
             _enemyUnitList.Add(unit); // Добавим его в список Вражеских Юнитов
+            OnAnyEnemyUnitSpawnedAndAddList?.Invoke(this, EventArgs.Empty);
         }
         else// если нет
         {
@@ -71,6 +76,7 @@ public class UnitManager : MonoBehaviour // Менеджер (администратор) Юнитов
         if (unit.IsEnemy()) // Если отправитель Враг то ...
         {
             _enemyUnitList.Remove(unit); // Удалим его из списка Вражеских Юнитов
+            _enemyUnitFullList.Remove(unit);
         }
         else// если нет
         {
@@ -96,5 +102,8 @@ public class UnitManager : MonoBehaviour // Менеджер (администратор) Юнитов
         return _enemyUnitList;
     }
 
-
+    public List<Unit> GetEnemyUnitFullList()
+    {
+        return _enemyUnitFullList;
+    }
 }

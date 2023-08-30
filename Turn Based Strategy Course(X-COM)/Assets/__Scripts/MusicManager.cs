@@ -15,7 +15,8 @@ public class MusicManager : MonoBehaviour   // Менеджер Фоновой �
         AssassinsBreathe,
         TheDarklands,
         KingArthur58DestinyOfTheSword,
-        GrowingUpLondinium
+        GrowingUpLondinium,
+        RunLondinium
     }
     private Music _music; // Аудио трек
     private float _musicTimer; //Таймер состояния
@@ -43,7 +44,7 @@ public class MusicManager : MonoBehaviour   // Менеджер Фоновой �
 
     private void Start()
     {
-        _music= Music.SeasonedOak;   
+        _music = Music.RunLondinium;
         _musicTimer = musicAudioClipDictionary[_music].length;
         PlayMusic(_music); // Воспроизведем данный трек
     }
@@ -52,7 +53,7 @@ public class MusicManager : MonoBehaviour   // Менеджер Фоновой �
     private void Update()
     {
         _musicTimer -= Time.deltaTime; // Запустим таймер для переключения состояний
-        
+
         if (_musicTimer <= 0) // По истечению времени _musicTimer вызовим NextMusic() которая в свою очередь переключит состояние. Например - у меня было TypeGrenade.Aiming: тогда в case TypeGrenade.Aiming: переключу на TypeGrenade.Shooting;
         {
             NextMusic(); //Следующая композиция
@@ -65,7 +66,7 @@ public class MusicManager : MonoBehaviour   // Менеджер Фоновой �
         {
             case Music.SeasonedOak:
                 _music = Music.KingArthur58LegendOfTheSword;
-               
+
                 break;
             case Music.KingArthur58LegendOfTheSword:
                 _music = Music.CaveFight;
@@ -88,6 +89,10 @@ public class MusicManager : MonoBehaviour   // Менеджер Фоновой �
                 break;
 
             case Music.GrowingUpLondinium:
+                _music = Music.RunLondinium;
+                break;
+
+            case Music.RunLondinium:
                 _music = Music.SeasonedOak;
                 break;
         }

@@ -27,7 +27,7 @@ public class OptionsMenagerUI : MonoBehaviour
 
     private void UnitManager_OnAnyUnitDeadAndRemoveList(object sender, System.EventArgs e)
     {
-       if(UnitManager.Instance.GetEnemyUnitList().Count ==0) // проверим список врагов если их число =0
+       if(UnitManager.Instance.GetEnemyUnitFullList().Count ==0) // проверим полный список врагов если их число =0
         {
             _gameEndUI.gameObject.SetActive(true);
             _gameEndTextText.SetText("ВСЕ ВРАГИ УНИЧТОЖЕНЫ :)");
